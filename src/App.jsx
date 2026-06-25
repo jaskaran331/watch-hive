@@ -291,7 +291,8 @@ export default function App() {
     let mounted = true;
     secureStorage.get("apikey").then((val) => {
       if (!mounted) return;
-      setApiKey(val || null);
+      const envToken = import.meta.env.VITE_TMDB_READ_ACCESS_TOKEN;
+      setApiKey(val || envToken || null);
       setApiKeyLoaded(true);
     });
     return () => {
