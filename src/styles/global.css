@@ -3871,3 +3871,157 @@ html[data-win-titlebar][data-maximized] .main {
 .episode-check-item:hover {
     color: var(--text) !important;
 }
+/* ── Responsive ────────────────────────────────────────────────────────────
+   The layout below was originally built desktop/Electron-only (fixed hero
+   height, fixed font sizes, fixed section padding, no breakpoints). This
+   adds a fluid layer for tablet and phone widths without touching the
+   desktop styles above. ────────────────────────────────────────────────── */
+
+/* Tablet / small laptop */
+@media (max-width: 1024px) {
+    .section {
+        padding: 15px 28px;
+    }
+
+    .hero {
+        height: 420px;
+    }
+
+    .hero-content {
+        padding: 32px;
+        max-width: 70%;
+    }
+
+    .hero-title {
+        font-size: 48px;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+}
+
+/* Phones / narrow tablets */
+@media (max-width: 700px) {
+    :root {
+        --sidebar: 56px;
+    }
+
+    body,
+    html,
+    #root {
+        overflow-x: hidden;
+    }
+
+    .section {
+        padding: 12px 16px;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+
+    .hero {
+        height: 340px;
+    }
+
+    .hero-content {
+        padding: 20px;
+        max-width: 100%;
+        right: 0;
+    }
+
+    .hero-title {
+        font-size: 30px;
+        margin-bottom: 10px;
+    }
+
+    .hero-meta {
+        font-size: 12px;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-overview {
+        font-size: 13px;
+        -webkit-line-clamp: 2;
+        margin-bottom: 16px;
+    }
+
+    .hero-actions {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 9px 16px;
+        font-size: 13px;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+        gap: 10px;
+    }
+
+    .scroll-row .card {
+        width: 115px;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 95vw;
+    }
+
+    .modal-overlay {
+        padding-top: 40px;
+    }
+
+    .download-modal,
+    .search-box {
+        max-height: 85vh;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 400px) {
+    :root {
+        --sidebar: 48px;
+    }
+
+    .sidebar {
+        padding: 10px 0;
+        gap: 4px;
+    }
+
+    .sidebar-logo,
+    .sidebar-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .sidebar-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .hero {
+        height: 300px;
+    }
+
+    .hero-title {
+        font-size: 24px;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    }
+}
+
+/* Sidebar tooltips don't make sense as hover-only on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .sidebar-btn .tooltip,
+    .saved-thumb-tooltip {
+        display: none;
+    }
+}
