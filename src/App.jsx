@@ -20,6 +20,7 @@ import { tmdbFetch, setApiErrorHandlers } from "./utils/api";
 import { clearAppCaches } from "./utils/storage";
 
 import Sidebar from "./components/Sidebar";
+import MobileNav from "./components/MobileNav";
 import SearchModal from "./components/SearchModal";
 import SetupScreen from "./components/SetupScreen";
 import UpdateModal from "./components/UpdateModal";
@@ -785,6 +786,14 @@ export default function App() {
           canGoBack={navStack.length > 0}
           onBack={navigateBack}
           onShowShortcuts={() => setShowShortcuts(true)}
+        />
+        <MobileNav
+          page={page}
+          onNavigate={navigate}
+          onSearch={() => setShowSearch(true)}
+          activeDownloads={activeDownloadCount}
+          canGoBack={navStack.length > 0}
+          onBack={navigateBack}
         />
 
         <div className="main">
