@@ -1,7 +1,7 @@
 export const StreambertLogo = ({ style }) => (
   <img
     src="./logo.jpg"
-    alt="Watch Verse"
+    alt="Watch Hive"
     width="44"
     height="44"
     style={{ width: "100%", height: "100%", display: "block", ...style }}

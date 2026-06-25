@@ -1221,22 +1221,7 @@ export default function MoviePage({
         />
       )}
 
-      {showDownload && (
-        <DownloadModal
-          onClose={() => setShowDownload(false)}
-          m3u8Url={m3u8Url}
-          subtitles={interceptedSubs}
-          mediaName={mediaName}
-          downloaderFolder={downloaderFolder}
-          setDownloaderFolder={handleSetDownloaderFolder}
-          onOpenSettings={onSettings}
-          onDownloadStarted={onDownloadStarted}
-          mediaId={item.id}
-          mediaType="movie"
-          posterPath={d.poster_path}
-          tmdbId={item.id}
-        />
-      )}
+      
     </div>
   );
 }

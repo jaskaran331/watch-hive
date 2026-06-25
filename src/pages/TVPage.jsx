@@ -2460,24 +2460,7 @@ export default function TVPage({
         />
       )}
 
-      {showDownload && (
-        <DownloadModal
-          onClose={() => setShowDownload(false)}
-          m3u8Url={m3u8Url}
-          subtitles={interceptedSubs}
-          mediaName={mediaName}
-          downloaderFolder={downloaderFolder}
-          setDownloaderFolder={handleSetDownloaderFolder}
-          onOpenSettings={onSettings}
-          onDownloadStarted={onDownloadStarted}
-          mediaId={item.id}
-          mediaType="tv"
-          season={selectedSeason}
-          episode={selectedEp?.episode_number}
-          posterPath={d.poster_path}
-          tmdbId={item.id}
-        />
-      )}
+      
     </div>
   );
 }
