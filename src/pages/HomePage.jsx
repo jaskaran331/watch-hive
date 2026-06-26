@@ -221,6 +221,14 @@ export default function HomePage({
 
   return (
     <div className="fade-in">
+      <Helmet>
+        <title>Watch Hive - Free Movies &amp; TV Shows</title>
+        <meta name="description" content="Stream the latest movies and TV shows for free in HD on Watch Hive." />
+        <meta property="og:title" content="Watch Hive - Free Movies &amp; TV Shows" />
+        <meta property="og:description" content="Stream the latest movies and TV shows for free in HD on Watch Hive." />
+        <meta name="twitter:title" content="Watch Hive - Free Movies &amp; TV Shows" />
+        <meta name="twitter:description" content="Stream the latest movies and TV shows for free in HD on Watch Hive." />
+      </Helmet>
       {/* ── Offline ── */}
       {offline && (
         <div

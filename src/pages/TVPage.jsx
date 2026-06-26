@@ -1541,6 +1541,14 @@ export default function TVPage({
 
   return (
     <div className="fade-in">
+      <Helmet>
+        <title>{item?.name ? `${item.name} - Watch Hive` : "TV Show - Watch Hive"}</title>
+        <meta name="description" content={item?.overview ? `Watch ${item.name}: ${item.overview}` : "Watch this TV show on Watch Hive."} />
+        <meta property="og:title" content={item?.name ? `${item.name} - Watch Hive` : "TV Show - Watch Hive"} />
+        <meta property="og:description" content={item?.overview ? `Watch ${item.name}: ${item.overview}` : "Watch this TV show on Watch Hive."} />
+        <meta name="twitter:title" content={item?.name ? `${item.name} - Watch Hive` : "TV Show - Watch Hive"} />
+        <meta name="twitter:description" content={item?.overview ? `Watch ${item.name}: ${item.overview}` : "Watch this TV show on Watch Hive."} />
+      </Helmet>
       {loading && (
         <div className="loader">
           <div className="spinner" />

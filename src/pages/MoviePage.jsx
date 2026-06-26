@@ -670,6 +670,14 @@ export default function MoviePage({
 
   return (
     <div className="fade-in">
+      <Helmet>
+        <title>{item?.title ? `${item.title} - Watch Hive` : "Movie - Watch Hive"}</title>
+        <meta name="description" content={item?.overview ? `Watch ${item.title}: ${item.overview}` : "Watch this movie on Watch Hive."} />
+        <meta property="og:title" content={item?.title ? `${item.title} - Watch Hive` : "Movie - Watch Hive"} />
+        <meta property="og:description" content={item?.overview ? `Watch ${item.title}: ${item.overview}` : "Watch this movie on Watch Hive."} />
+        <meta name="twitter:title" content={item?.title ? `${item.title} - Watch Hive` : "Movie - Watch Hive"} />
+        <meta name="twitter:description" content={item?.overview ? `Watch ${item.title}: ${item.overview}` : "Watch this movie on Watch Hive."} />
+      </Helmet>
       <div className="detail-hero">
         <div
           className="detail-bg"
