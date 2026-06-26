@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import {
   useState,
   useEffect,
@@ -1455,6 +1456,15 @@ export default function TVPage({
         episode: ep.episode_number,
         episodeName: ep.name,
       });
+      setTimeout(() => {
+        if (playerWrapRef.current) {
+          const rect = playerWrapRef.current.getBoundingClientRect();
+          const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+          if (!inView) {
+            playerWrapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+      }, 100);
       // d and selectedSeason are stable within a season view; onHistory is useCallback in App
     },
     [d, selectedSeason, onHistory],
@@ -2144,48 +2154,15 @@ export default function TVPage({
                     ))}
                   </div>
                 )}
-                <button
-                  className="player-overlay-btn"
-                  onClick={() =>
-                    currentEpDownload
-                      ? onGoToDownloads?.(currentEpDownload.id)
-                      : (setShowSourceMenu(false), setShowDownload(true))
-                  }
-                  title={
-                    currentEpDownload
-                      ? currentEpDownload.status === "downloading"
-                        ? "Downloading… - view in Downloads"
-                        : "Already downloaded - view in Downloads"
-                      : "Download"
-                  }
-                >
-                  {currentEpDownload ? (
-                    <span
-                      className="player-downloaded-icon"
-                      style={{
-                        color:
-                          currentEpDownload.status === "downloading"
-                            ? "var(--accent)"
-                            : "#4caf50",
-                      }}
-                    >
-                      {currentEpDownload.status === "downloading" ? "↓" : "✓"}
-                    </span>
-                  ) : (
-                    <DownloadIcon />
-                  )}
-                  {!currentEpDownload && m3u8Url && (
-                    <span className="player-overlay-dot" />
-                  )}
-                  {!supportsProgress && (
-                    <span
-                      className="player-no-progress-hint"
-                      title="No automatic progress tracking for this source"
-                    >
-                      ⚠ no tracking
-                    </span>
-                  )}
-                </button>
+                {!supportsProgress && (
+                  <span
+                    className="player-no-progress-hint"
+                    title="No automatic progress tracking for this source"
+                    style={{ display: "inline-flex", alignItems: "center", padding: "0 8px", fontSize: 12, color: "var(--text2)", background: "var(--bg-elevated)", borderRadius: 4, marginLeft: "auto" }}
+                  >
+                    ⚠ no tracking
+                  </span>
+                )}
 
                 {/* Skip controls are injected directly into the webview DOM*/}
 
@@ -2564,36 +2541,7 @@ const EpisodeCard = memo(function EpisodeCard({
         >
           E{ep.episode_number}
           {epWatched && <WatchedIcon size={14} />}
-          {epDownload && (
-            <span
-              className="ep-downloaded-badge"
-              title={
-                epDownload.status === "downloading"
-                  ? "Downloading… - click to view in Downloads"
-                  : "Downloaded - click to view in Downloads"
-              }
-              style={{
-                borderColor:
-                  epDownload.status === "downloading"
-                    ? "var(--accent)"
-                    : "rgba(72,199,116,0.5)",
-                color:
-                  epDownload.status === "downloading"
-                    ? "var(--accent)"
-                    : "#4caf50",
-                background:
-                  epDownload.status === "downloading"
-                    ? "rgba(229,9,20,0.12)"
-                    : "rgba(72,199,116,0.18)",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onGoToDownloads?.(epDownload.id);
-              }}
-            >
-              ↓
-            </span>
-          )}
+
         </div>
         <div className="episode-name">{ep.name}</div>
         <EpisodeDesc overview={ep.overview} episodeName={ep.name} />

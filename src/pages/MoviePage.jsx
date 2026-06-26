@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import {
   useState,
   useEffect,
@@ -1110,48 +1111,15 @@ export default function MoviePage({
                 ))}
               </div>
             )}
-            <button
-              className="player-overlay-btn"
-              onClick={() =>
-                movieDownload
-                  ? onGoToDownloads?.(movieDownload.id)
-                  : (setShowSourceMenu(false), setShowDownload(true))
-              }
-              title={
-                movieDownload
-                  ? movieDownload.status === "downloading"
-                    ? "Downloading… - view in Downloads"
-                    : "Already downloaded - view in Downloads"
-                  : "Download"
-              }
-            >
-              {movieDownload ? (
-                <span
-                  className="player-downloaded-icon"
-                  style={{
-                    color:
-                      movieDownload.status === "downloading"
-                        ? "var(--accent)"
-                        : "#4caf50",
-                  }}
-                >
-                  {movieDownload.status === "downloading" ? "↓" : "✓"}
-                </span>
-              ) : (
-                <DownloadIcon />
-              )}
-              {!movieDownload && m3u8Url && (
-                <span className="player-overlay-dot" />
-              )}
               {!sourceSupportsProgress(playerSource) && (
                 <span
                   className="player-no-progress-hint"
                   title="No automatic progress tracking for this source"
+                  style={{ display: "inline-flex", alignItems: "center", padding: "0 8px", fontSize: 12, color: "var(--text2)", background: "var(--bg-elevated)", borderRadius: 4, marginLeft: "auto" }}
                 >
                   ⚠ no tracking
                 </span>
               )}
-            </button>
           </div>
 
           {displayPct > 0 && (
