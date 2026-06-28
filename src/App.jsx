@@ -36,6 +36,7 @@ import {
   checkForUpdatesWithFallback,
   DEFAULT_UPDATE_SOURCE,
 } from "./utils/updates";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function App() {
   // apiKey loaded async from secure storage (OS keychain)
@@ -1190,6 +1191,7 @@ export default function App() {
           <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
         )}
       </div>
+      <Analytics />
     </ErrorBoundary>
   );
 }
