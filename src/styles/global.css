@@ -4137,3 +4137,40 @@ html[data-win-titlebar][data-maximized] .main {
         padding: 0 4px;
     }
 }
+
+/* =========================================================================
+   TV & Large Display Optimizations
+   ========================================================================= */
+
+@media (min-width: 1920px) {
+  :root {
+    font-size: 110%; /* Slightly scale up everything on 4K TVs */
+  }
+  .player-wrapper {
+    max-height: 85vh; /* Larger player height */
+  }
+}
+
+/* Spatial Navigation & Focus States for D-Pad / Remote Controls */
+.card:focus,
+.episode-card:focus,
+.season-item:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.icon-btn:focus,
+.navbar-item:focus,
+.search-input:focus,
+.nav-logo:focus {
+  outline: 4px solid var(--accent) !important;
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+  transform: scale(1.03);
+  transition: all 0.2s ease-out;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  z-index: 10;
+}
+
+.card:focus .card-info .card-title,
+.episode-card:focus .episode-title {
+  color: var(--accent);
+}

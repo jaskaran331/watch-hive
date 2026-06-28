@@ -2486,6 +2486,8 @@ const EpisodeCard = memo(function EpisodeCard({
     <div
       className={`episode-card ${isPlaying ? "playing" : ""} ${epWatched ? "ep-watched" : ""} ${restricted ? "episode-card--restricted" : ""} ${epUnreleased ? "episode-card--unreleased" : ""}`}
       onClick={() => (restricted || epUnreleased ? null : onPlay(ep))}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!restricted && !epUnreleased) onPlay(ep); } }}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();

@@ -84,6 +84,13 @@ const MediaCard = memo(function MediaCard({
         className={`card${isWatched ? " ep-watched" : ""}${isUnreleased ? " card--unreleased" : ""}`}
         onClick={onClick}
         onContextMenu={isUnreleased ? undefined : openMenu}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        }}
       >
         <div className="card-poster">
           {item.poster_path ? (
