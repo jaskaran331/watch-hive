@@ -2504,10 +2504,9 @@ export default function TVPage({
 // ── EpisodeCard ────────────────────────────────────────────────────────────
 // Isolated memo'd component so progress-bar updates (every 5s) only re-render
 // the one currently-playing card, not all 24+ cards in the grid.
-const _todayForEpisodes = (() => {
+const _todayStrForEpisodes = (() => {
   const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 })();
 
 const EpisodeCard = memo(function EpisodeCard({
@@ -2527,7 +2526,7 @@ const EpisodeCard = memo(function EpisodeCard({
   const pk = `tv_${itemId}_s${selectedSeason}e${ep.episode_number}`;
   const isPlaying = playing && selectedEpNumber === ep.episode_number;
   const epUnreleased = ep.air_date
-    ? new Date(ep.air_date) > _todayForEpisodes
+    ? ep.air_date > _todayStrForEpisodes
     : false;
   const epDownload =
     downloadsByEpisodeKey.get(`s${selectedSeason}e${ep.episode_number}`) ??

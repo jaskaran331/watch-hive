@@ -674,8 +674,8 @@ export default function MoviePage({
   const isUnreleased = useMemo(() => {
     if (!d.release_date) return false;
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return new Date(d.release_date) > today;
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return d.release_date > todayStr;
   }, [d.release_date]);
 
   // Check if this movie is already downloaded or currently downloading
