@@ -45,6 +45,7 @@ import TrailerModal from "../components/TrailerModal";
 import BlockedStatsModal from "../components/BlockedStatsModal";
 import { useBlockedStats } from "../utils/useBlockedStats";
 import MediaCard from "../components/MediaCard";
+import TrendingCarousel from "../components/TrendingCarousel";
 import {
   storage,
   STORAGE_KEYS,
@@ -79,6 +80,7 @@ export default function MoviePage({
   onSelect,
 }) {
   const [details, setDetails] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [playing, setPlaying] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
@@ -202,8 +204,25 @@ export default function MoviePage({
   const seekBackCooldownRef = useRef(0);
 
   useEffect(() => {
+    if (!apiKey || !item?.id) return;
+    const controller = new AbortController();
+    tmdbFetch(`/movie/${item.id}/recommendations`, apiKey, { signal: controller.signal })
+      .then(data => {
+        const recs = (data.results || []).map(i => ({ ...i, media_type: "movie" }));
+        if (recs.length > 0) {
+          setRecommendations(recs);
+        } else {
+          tmdbFetch(`/movie/${item.id}/similar`, apiKey, { signal: controller.signal })
+            .then(sim => setRecommendations((sim.results || []).map(i => ({ ...i, media_type: "movie" }))));
+        }
+      })
+      .catch(console.warn);
+    return () => controller.abort();
+  }, [item?.id, apiKey]);
+
+  useEffect(() => {
     let mounted = true;
-    tmdbFetch(`/movie/${item.id}`, apiKey)
+    tmdbFetch(`/movie/${item.id}?append_to_response=credits`, apiKey)
       .then((d) => {
         if (mounted) setDetails(d);
       })
@@ -750,6 +769,28 @@ export default function MoviePage({
                 )}
               </div>
             )}
+            
+            {d.credits?.cast && d.credits.cast.length > 0 && (
+              <div className="detail-cast">
+                <div className="detail-cast-title">Top Cast</div>
+                <div className="detail-cast-list">
+                  {d.credits.cast.slice(0, 10).map((actor) => (
+                    <div key={actor.id} className="cast-member">
+                      {actor.profile_path ? (
+                        <img className="cast-avatar" src={imgUrl(actor.profile_path, 'w185')} alt={actor.name} loading="lazy" />
+                      ) : (
+                        <div className="cast-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: 24, color: 'var(--text3)' }}>{actor.name.charAt(0)}</span>
+                        </div>
+                      )}
+                      <span className="cast-name">{actor.name}</span>
+                      <span className="cast-role">{actor.character}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <p className="detail-overview">{displayOverview}</p>
             {!isWatched && displayPct > 0 && (
               <div className="progress-bar-row" style={{ marginBottom: 12 }}>
@@ -948,7 +989,7 @@ export default function MoviePage({
                 </button>
               </div>
             )}
-            <iframe allowFullScreen onLoad={() => setWebviewLoading(false)}
+            <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => setWebviewLoading(false)}
               ref={webviewRef}
               src={
                 pipOpen
@@ -1064,7 +1105,7 @@ export default function MoviePage({
                   (webviewLoading ||
                     !!(sourceIsAsync(playerSource) && !resolvedPlayerUrl))
                 }
-                style={pipOpen ? { color: "var(--accent)" } : undefined}
+                style={pipOpen ? { color: "var(--red)" } : undefined}
               >
                 <PopOutIcon />
               </button>
@@ -1178,6 +1219,16 @@ export default function MoviePage({
             })}
           </div>
         </div>
+      )}
+
+      
+      {recommendations.length > 0 && (
+        <TrendingCarousel
+          items={recommendations}
+          title="Recommended"
+          onSelect={onSelect}
+          ratingsMap={{}}
+        />
       )}
 
       {showTrailer && trailerKey && (

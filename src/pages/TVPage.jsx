@@ -13,8 +13,8 @@ import {
   applyEpisodeMapping,
   buildEpisodeGroupMap,
 } from "../utils/episodeMappings";
-import {
-  tmdbFetch,
+import TrendingCarousel from "../components/TrendingCarousel";
+import { tmdbFetch,
   imgUrl,
   PLAYER_SOURCES,
   getSourceUrl,
@@ -292,7 +292,7 @@ const INJECT_SKIP_CONTROLS = `
     } else {
       btn.style.right = '24px';
     }
-    btn.onmouseenter = function() { btn.style.background = 'var(--accent)'; btn.style.borderColor = 'transparent'; };
+    btn.onmouseenter = function() { btn.style.background = 'var(--red)'; btn.style.borderColor = 'transparent'; };
     btn.onmouseleave = function() { btn.style.background = 'rgba(0,0,0,0.72)'; btn.style.borderColor = 'rgba(255,255,255,0.18)'; };
     btn.onclick = function(e) {
       e.stopPropagation();
@@ -373,8 +373,10 @@ export default function TVPage({
   onMarkUnwatched,
   downloads,
   onGoToDownloads,
+  onSelect,
 }) {
   const [details, setDetails] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [seasonData, setSeasonData] = useState(null);
   const [failedSeasons, setFailedSeasons] = useState(() => new Set()); // season numbers which give 404 on TMDB
   const [selectedSeason, setSelectedSeason] = useState(() =>
@@ -489,9 +491,26 @@ export default function TVPage({
   const seekBackCooldownRef = useRef(0);
 
   useEffect(() => {
+    if (!apiKey || !item?.id) return;
+    const controller = new AbortController();
+    tmdbFetch(`/tv/${item.id}/recommendations`, apiKey, { signal: controller.signal })
+      .then(data => {
+        const recs = (data.results || []).map(i => ({ ...i, media_type: "tv" }));
+        if (recs.length > 0) {
+          setRecommendations(recs);
+        } else {
+          tmdbFetch(`/tv/${item.id}/similar`, apiKey, { signal: controller.signal })
+            .then(sim => setRecommendations((sim.results || []).map(i => ({ ...i, media_type: "tv" }))));
+        }
+      })
+      .catch(console.warn);
+    return () => controller.abort();
+  }, [item?.id, apiKey]);
+
+  useEffect(() => {
     let mounted = true;
     setLoading(true);
-    tmdbFetch(`/tv/${item.id}`, apiKey)
+    tmdbFetch(`/tv/${item.id}?append_to_response=credits`, apiKey)
       .then((d) => {
         if (!mounted) return;
         setDetails(d);
@@ -1640,7 +1659,29 @@ export default function TVPage({
                     )}
                   </div>
                 )}
-                <p className="detail-overview">{displayOverview}</p>
+                
+            {d.credits?.cast && d.credits.cast.length > 0 && (
+              <div className="detail-cast">
+                <div className="detail-cast-title">Top Cast</div>
+                <div className="detail-cast-list">
+                  {d.credits.cast.slice(0, 10).map((actor) => (
+                    <div key={actor.id} className="cast-member">
+                      {actor.profile_path ? (
+                        <img className="cast-avatar" src={imgUrl(actor.profile_path, 'w185')} alt={actor.name} loading="lazy" />
+                      ) : (
+                        <div className="cast-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: 24, color: 'var(--text3)' }}>{actor.name.charAt(0)}</span>
+                        </div>
+                      )}
+                      <span className="cast-name">{actor.name}</span>
+                      <span className="cast-role">{actor.character}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="detail-overview">{displayOverview}</p>
                 <div className="detail-actions">
                   {trailerKey &&
                     (restricted ? (
@@ -1847,7 +1888,7 @@ export default function TVPage({
                           fontWeight: "700",
                           letterSpacing: "1.5px",
                           textTransform: "uppercase",
-                          color: "var(--accent)",
+                          color: "var(--red)",
                           marginBottom: "8px",
                         }}
                       >
@@ -1952,9 +1993,9 @@ export default function TVPage({
                             padding: "10px 22px",
                             fontSize: "14px",
                             fontWeight: "600",
-                            background: "var(--accent)",
-                            borderColor: "var(--accent)",
-                            boxShadow: "var(--accent-glow)",
+                            background: "var(--red)",
+                            borderColor: "var(--red)",
+                            boxShadow: "var(--red-glow)",
                           }}
                           onClick={playNow}
                         >
@@ -1976,7 +2017,7 @@ export default function TVPage({
                     </div>
                   </div>
                 )}
-                <iframe allowFullScreen onLoad={() => setWebviewLoading(false)}
+                <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => setWebviewLoading(false)}
                   ref={webviewRef}
                   src={
                     pipOpen
@@ -2099,7 +2140,7 @@ export default function TVPage({
                       !pipOpen &&
                       (webviewLoading || !!(isAsync && !resolvedPlayerUrl))
                     }
-                    style={pipOpen ? { color: "var(--accent)" } : undefined}
+                    style={pipOpen ? { color: "var(--red)" } : undefined}
                   >
                     <PopOutIcon />
                   </button>
@@ -2192,8 +2233,8 @@ export default function TVPage({
                       animation: "slideDown 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--accent)";
-                      e.currentTarget.style.borderColor = "var(--accent)";
+                      e.currentTarget.style.background = "var(--red)";
+                      e.currentTarget.style.borderColor = "var(--red)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "rgba(0,0,0,0.72)";
@@ -2394,6 +2435,16 @@ export default function TVPage({
               )}
           </div>
         </>
+      )}
+
+      
+      {recommendations.length > 0 && (
+        <TrendingCarousel
+          items={recommendations}
+          title="Recommended"
+          onSelect={onSelect}
+          ratingsMap={{}}
+        />
       )}
 
       {showTrailer && trailerKey && (

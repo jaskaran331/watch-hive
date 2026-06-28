@@ -108,7 +108,7 @@ export default function Sidebar({
         title="Watch Hive"
         style={{ position: "relative" }}
       >
-        <img src="/logo.jpg" alt="Watch Verse Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
+        <img src="/logo.png" alt="Watch Verse Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
       </div>
 
       {canGoBack && (

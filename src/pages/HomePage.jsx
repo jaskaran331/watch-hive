@@ -1,7 +1,8 @@
 import { Helmet } from 'react-helmet-async';
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import MediaCard from "../components/MediaCard";
 import TrendingCarousel from "../components/TrendingCarousel";
+import RatingBadge from "../components/RatingBadge";
 import { PlayIcon, StarIcon } from "../components/Icons";
 import { imgUrl, tmdbFetch } from "../utils/api";
 import { useRatings, getRatingForItem } from "../utils/useRatings";
@@ -48,10 +49,26 @@ export default function HomePage({
   history,
   apiKey,
 }) {
-  const hero = trending[0];
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Auto-play
+  useEffect(() => {
+    if (!trending || trending.length === 0) return;
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % Math.min(trending.length, 5));
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [trending]);
+
+  const currentHero = trending[heroIndex] || trending[0];
+
+  const nextHero = () => setHeroIndex((prev) => (prev + 1) % Math.min(trending.length, 5));
+  const prevHero = () => setHeroIndex((prev) => (prev - 1 + Math.min(trending.length, 5)) % Math.min(trending.length, 5));
 
   const [recommendedItems, setRecommendedItems] = useState([]);
-  const [topRatedItems, setTopRatedItems] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+  const [bingeWorthy, setBingeWorthy] = useState([]);
+  const [anime, setAnime] = useState([]);
 
   // Load layout config (order + visibility) once on mount
   const [layout] = useState(() => loadHomeLayout());
@@ -79,9 +96,11 @@ export default function HomePage({
       ...trending.map((i) => ({ ...i, media_type: "movie" })),
       ...trendingTV.map((i) => ({ ...i, media_type: "tv" })),
       ...recommendedItems,
-      ...topRatedItems,
+      ...topRated,
+      ...bingeWorthy.map((i) => ({ ...i, media_type: "tv" })),
+      ...anime.map((i) => ({ ...i, media_type: "tv" })),
     ],
-    [inProgress, trending, trendingTV, recommendedItems, topRatedItems],
+    [inProgress, trending, trendingTV, recommendedItems, topRated, bingeWorthy, anime]
   );
 
   const { ratingsMap, ageLimitSetting } = useRatings(allItems);
@@ -181,27 +200,20 @@ export default function HomePage({
   useEffect(() => {
     if (!apiKey || offline) return;
     const controller = new AbortController();
-    Promise.all([
-      tmdbFetch("/movie/top_rated?page=1", apiKey, {
-        signal: controller.signal,
-      }),
-      tmdbFetch("/tv/top_rated?page=1", apiKey, { signal: controller.signal }),
+        Promise.all([
+      tmdbFetch("/movie/top_rated?page=1", apiKey, { signal: controller.signal }),
+      tmdbFetch("/tv/popular?page=1", apiKey, { signal: controller.signal }),
+      tmdbFetch("/discover/tv?with_genres=16&with_original_language=ja&page=1", apiKey, { signal: controller.signal }),
     ])
-      .then(([moviesData, tvData]) => {
-        const movies = (moviesData.results || [])
-          .slice(0, 8)
-          .map((i) => ({ ...i, media_type: "movie" }));
-        const tv = (tvData.results || [])
-          .slice(0, 8)
-          .map((i) => ({ ...i, media_type: "tv" }));
-        // Interleave movies and TV for variety
-        const merged = [];
-        const max = Math.max(movies.length, tv.length);
-        for (let i = 0; i < max; i++) {
-          if (movies[i]) merged.push(movies[i]);
-          if (tv[i]) merged.push(tv[i]);
-        }
-        setTopRatedItems(merged);
+      .then(([topData, popularData, animeData]) => {
+        const top = (topData.results || []).slice(0, 10).map((i) => ({ ...i, media_type: "movie" }));
+        const pop = (popularData.results || []).slice(0, 10).map((i) => ({ ...i, media_type: "tv" }));
+        const ani = (animeData.results || []).slice(0, 10).map((i) => ({ ...i, media_type: "tv" }));
+        
+        // Ensure both states are set so UI renders
+        setTopRated(top);
+        setBingeWorthy(pop);
+        setAnime(ani);
       })
       .catch((e) => {
         if (e.name !== "AbortError") console.warn("Top rated fetch failed", e);
@@ -268,40 +280,51 @@ export default function HomePage({
       )}
 
       {/* ── Hero (always first) ── */}
-      {!loading && hero && (
+      {!loading && currentHero && (
         <div className="hero">
           <div
             className="hero-bg"
             style={{
-              backgroundImage: `url(${imgUrl(hero.backdrop_path, "original")})`,
+              backgroundImage: `url(${imgUrl(currentHero.backdrop_path, "original")})`,
             }}
           />
           <div className="hero-gradient" />
+          
+          <button className="hero-nav-btn left" onClick={prevHero}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
           <div className="hero-content">
-            <div className="hero-type">Trending · Movie</div>
-            <div className="hero-title">{hero.title || hero.name}</div>
+            <div className="hero-type">NOW STREAMING</div>
+            <div className="hero-title">{currentHero.title || currentHero.name}</div>
             <div className="hero-meta">
               <span className="hero-rating">
-                <StarIcon /> {hero.vote_average?.toFixed(1)}
+                <StarIcon /> {currentHero.vote_average?.toFixed(1)}
               </span>
-              <span>{hero.release_date?.slice(0, 4)}</span>
+              <RatingBadge
+                cert={getRating(currentHero).cert}
+                restricted={getRating(currentHero).restricted}
+              />
+              <span>{currentHero.release_date?.slice(0, 4) || currentHero.first_air_date?.slice(0, 4)}</span>
             </div>
-            <div className="hero-overview">{hero.overview}</div>
+            <div className="hero-overview">{currentHero.overview}</div>
             <div className="hero-actions">
               <button
-                className="btn btn-primary"
-                onClick={() => onSelect(hero)}
+                className="btn btn-yellow"
+                onClick={() => onSelect(currentHero)}
               >
                 <PlayIcon /> Watch Now
               </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => onSelect(hero)}
-              >
-                More Info
-              </button>
             </div>
           </div>
+
+          <button className="hero-nav-btn right" onClick={nextHero}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -342,7 +365,7 @@ export default function HomePage({
         }
 
         // Render a section as a flat cards-grid (list view)
-        const renderList = (key, title, titleHighlight, items) => {
+        const renderList = (key, title, titleHighlight, items, isRanked = false) => {
           if (!items || items.length === 0) return null;
           return (
             <div key={key} className="section">
@@ -368,6 +391,7 @@ export default function HomePage({
                       key={`${item.media_type}_${item.id}`}
                       item={item}
                       onClick={() => onSelect(item)}
+                      rank={isRanked ? items.indexOf(item) + 1 : undefined}
                       progress={0}
                       watched={watched}
                       onMarkWatched={onMarkWatched}
@@ -442,21 +466,24 @@ export default function HomePage({
           );
         }
 
+        
         if (id === "topRated") {
-          if (topRatedItems.length === 0) return null;
-          if (effectiveViewMode === "list")
-            return renderList("topRated", "Top Rated", null, topRatedItems);
-          return (
-            <TrendingCarousel
-              key="topRated"
-              items={topRatedItems}
-              title="Top Rated"
-              onSelect={onSelect}
-              ratingsMap={enrichedRatingsMap}
-            />
-          );
+          if (topRated.length === 0) return null;
+          if (effectiveViewMode === "list") return renderList("topRated", "Top Rated", null, topRated);
+          return <TrendingCarousel key="topRated" items={topRated} title="Top Rated" onSelect={onSelect} ratingsMap={enrichedRatingsMap} />;
         }
-
+        
+        if (id === "bingeWorthy") {
+          if (bingeWorthy.length === 0) return null;
+          if (effectiveViewMode === "list") return renderList("bingeWorthy", "Binge Worthy TV Shows", null, bingeWorthy);
+          return <TrendingCarousel key="bingeWorthy" items={bingeWorthy} title="Binge Worthy TV Shows" onSelect={onSelect} ratingsMap={enrichedRatingsMap} />;
+        }
+        
+        if (id === "anime") {
+          if (anime.length === 0) return null;
+          if (effectiveViewMode === "list") return renderList("anime", "Anime", null, anime);
+          return <TrendingCarousel key="anime" items={anime} title="Anime" onSelect={onSelect} ratingsMap={enrichedRatingsMap} />;
+        }
         return null;
       })}
     </div>

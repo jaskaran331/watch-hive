@@ -18,6 +18,7 @@ const MediaCard = memo(function MediaCard({
   onMarkUnwatched,
   ageRating,
   restricted,
+  rank,
 }) {
   const title = item.title || item.name;
   const year = (item.release_date || item.first_air_date || "").slice(0, 4);
@@ -143,6 +144,9 @@ const MediaCard = memo(function MediaCard({
             <div className="card-watched-badge">
               <WatchedIcon size={26} />
             </div>
+          )}
+          {rank != null && (
+            <div className="card-rank">{rank}</div>
           )}
         </div>
         <div className="card-info">

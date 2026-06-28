@@ -35,6 +35,7 @@ const RatingBadge = memo(function RatingBadge({ cert, restricted }) {
 });
 
 const CarouselSlot = memo(function CarouselSlot({
+  rank,
   item,
   offset,
   onSelect,
@@ -153,6 +154,7 @@ export default function TrendingCarousel({
   title,
   titleHighlight,
   ratingsMap = {},
+  isRanked = false,
 }) {
   const count = items.length;
   const activeRef = useRef(0);
@@ -414,6 +416,7 @@ export default function TrendingCarousel({
                 ageRating={isCenter ? ratingData.cert : null}
                 restricted={isCenter ? ratingData.restricted : false}
                 isAnime={isCenter ? isAnimeContent(items[idx]) : false}
+                rank={isRanked ? idx + 1 : undefined}
               />
             );
           })}

@@ -2089,7 +2089,7 @@ function SubtitleSettingsSection() {
                   display: "inline",
                   padding: 0,
                   fontSize: 12,
-                  color: "var(--accent)",
+                  color: "var(--red)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",

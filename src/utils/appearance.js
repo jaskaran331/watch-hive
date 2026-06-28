@@ -6,10 +6,10 @@ export const ACCENT_PRESETS = [
   {
     id: "red",
     label: "Red",
-    color: "#a855f7",
-    color2: "#c084fc",
-    dim: "rgba(168,85,247,0.15)",
-    glow: "0 0 30px rgba(168,85,247,0.3)",
+    color: "#F5C518",
+    color2: "#FFD700",
+    dim: "rgba(245, 197, 24,0.15)",
+    glow: "0 0 30px rgba(245, 197, 24,0.3)",
   },
   {
     id: "blue",
@@ -22,10 +22,10 @@ export const ACCENT_PRESETS = [
   {
     id: "purple",
     label: "Purple",
-    color: "#7c3aed",
-    color2: "#8b5cf6",
-    dim: "rgba(124,58,237,0.15)",
-    glow: "0 0 30px rgba(124,58,237,0.3)",
+    color: "#F5C518",
+    color2: "#FFD700",
+    dim: "rgba(245, 197, 24,0.15)",
+    glow: "0 0 30px rgba(245, 197, 24,0.3)",
   },
   {
     id: "green",

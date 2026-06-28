@@ -5,10 +5,11 @@ import { storage } from "./storage";
 
 export const HOME_ROWS = [
   { id: "continue", label: "Continue Watching" },
-  { id: "recommended", label: "Recommended for You" },
   { id: "trendingMovies", label: "Trending Movies" },
   { id: "trendingTV", label: "Trending Series" },
   { id: "topRated", label: "Top Rated" },
+  { id: "bingeWorthy", label: "Binge Worthy TV Shows" },
+  { id: "anime", label: "Anime" },
 ];
 
 const DEFAULT_ROW_ORDER = HOME_ROWS.map((r) => r.id);

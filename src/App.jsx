@@ -22,6 +22,7 @@ import { clearAppCaches } from "./utils/storage";
 import Sidebar from "./components/Sidebar";
 import MobileNav from "./components/MobileNav";
 import SearchModal from "./components/SearchModal";
+import Footer from "./components/Footer";
 import SetupScreen from "./components/SetupScreen";
 import UpdateModal from "./components/UpdateModal";
 
@@ -900,6 +901,7 @@ export default function App() {
                 onMarkUnwatched={markUnwatched}
                 downloads={downloads}
                 onGoToDownloads={handleGoToDownloads}
+                onSelect={handleSelectResult}
               />
             )}
             {page === "history" && (
@@ -924,6 +926,7 @@ export default function App() {
             )}
 
           </Suspense>
+          <Footer />
         </div>
 
         {showSearch && (
