@@ -124,6 +124,19 @@ export const tmdbFetch = async (path, apiKey) => {
 // supportsProgress: true = executeJavaScript tracking works for this source
 export const PLAYER_SOURCES = [
   {
+    id: "nxsha",
+    label: "Nxsha",
+    tag: null,
+    note: null,
+    supportsProgress: true,
+    colorParam: null,
+    langParam: null,
+    params: {},
+    movieUrl: (id) => `https://web.nxsha.app/embed/movie/${id}`,
+    tvUrl: (id, season, ep) =>
+      `https://web.nxsha.app/embed/tv/${id}/${season}/${ep}`,
+  },
+  {
     id: "videasy",
     label: "Videasy",
     tag: null,
