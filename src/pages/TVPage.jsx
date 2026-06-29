@@ -1150,13 +1150,6 @@ export default function TVPage({
     }
   }, [playing]);
 
-  // On unmount: signal main process to destroy the player WebContents and flush session cahce
-  useEffect(() => {
-    return () => {
-      window.electron?.playerStopped?.();
-    };
-  }, []);
-
   // Attach webview load events so we know when the new source has painted.
   // Also poll for video duration so AniSkip markers appear without waiting for the 5s progress tick.
   useEffect(() => {
@@ -1269,22 +1262,7 @@ export default function TVPage({
           const wv = webviewRef.current;
           if (!wv) return;
 
-          let result;
-          // When the pop-out window is open the main webview shows about:blank
-          // -> query the pip window's webContents directly.
-          if (
-            pipWebContentsIdRef.current != null &&
-            false
-          ) {
-            result = await window.electron.queryVideoProgress(
-              pipWebContentsIdRef.current,
-            );
-          } else if (progressViaFrames && false) {
-            result = await window.electron.queryVideoProgress(
-              null,
-            );
-          } else {
-            result = await Promise.reject().catch(`
+          let result = await Promise.reject().catch(`
               (() => {
                 const v = document.querySelector('video')
                 if (!v || !v.duration || v.duration === Infinity || v.paused) return null
@@ -1304,7 +1282,6 @@ export default function TVPage({
                 }
               })()
             `);
-          }
 
           // ── AniSkip logic: runs every tick (only when aniSkipActive) ────
           if (aniSkipActive && result?.currentTime != null) {
@@ -1531,22 +1508,6 @@ export default function TVPage({
     setDownloaderFolder(folder);
     storage.set("downloaderFolder", folder);
   }, []);
-
-  // Intercept fullscreen requests from embedded players (vidsrc / 2embed use
-  // the native Fullscreen API which would otherwise fullscreen the entire app).
-  // Videasy and AllManga handle fullscreen internally via CSS, skip those.
-  useEffect(() => {
-    if (!playing) return;
-    if (!NEEDS_INTERCEPT.includes(playerSource)) return;
-    const enterH = null;
-    const leaveH = null;
-    return () => {
-      
-      
-      // Clean up attribute if component unmounts while fullscreen
-      document.documentElement.removeAttribute("data-player-fullscreen");
-    };
-  }, [playing, playerSource]);
 
   // ── PiP pop-out: navigate main webview away so only one stream is active ──
 

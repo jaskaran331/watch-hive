@@ -480,13 +480,6 @@ export default function MoviePage({
     }
   }, [playing]);
 
-  // On unmount: signal main process to destroy the player WebContents and flush session cache.
-  useEffect(() => {
-    return () => {
-      window.electron?.playerStopped?.();
-    };
-  }, []);
-
   // Attach webview load events so we know when the new source has painted
   useEffect(() => {
     if (!playing) return;
@@ -510,22 +503,7 @@ export default function MoviePage({
         try {
           const wv = webviewRef.current;
           if (!wv) return;
-          let result;
-          // When the pop-out window is open the main webview shows about:blank
-          // -> query the pip window's webContents directly.
-          if (
-            pipWebContentsIdRef.current != null &&
-            false
-          ) {
-            result = await window.electron.queryVideoProgress(
-              pipWebContentsIdRef.current,
-            );
-          } else if (progressViaFrames && false) {
-            result = await window.electron.queryVideoProgress(
-              null,
-            );
-          } else {
-            result = await Promise.reject().catch(`
+          let result = await Promise.reject().catch(`
               (() => {
                 const v = document.querySelector('video')
                 if (!v || !v.duration || v.duration === Infinity || v.paused) return null
@@ -545,7 +523,6 @@ export default function MoviePage({
                 }
               })()
             `);
-          }
           if (result && result.duration > 0) {
             const ct = result.currentTime;
 
