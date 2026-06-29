@@ -124,19 +124,6 @@ export const tmdbFetch = async (path, apiKey) => {
 // supportsProgress: true = executeJavaScript tracking works for this source
 export const PLAYER_SOURCES = [
   {
-    id: "nxsha",
-    label: "Nxsha",
-    tag: null,
-    note: null,
-    supportsProgress: true,
-    colorParam: null,
-    langParam: null,
-    params: {},
-    movieUrl: (id) => `https://web.nxsha.app/embed/movie/${id}`,
-    tvUrl: (id, season, ep) =>
-      `https://web.nxsha.app/embed/tv/${id}/${season}/${ep}`,
-  },
-  {
     id: "videasy",
     label: "Videasy",
     tag: null,
@@ -146,11 +133,26 @@ export const PLAYER_SOURCES = [
     langParam: null, // no subtitle lang param
     params: {
       overlay: "true",
+      autoplay: "1",
     },
     movieUrl: (id) => `https://player.videasy.to/movie/${id}`,
     tvUrl: (id, season, ep) =>
       `https://player.videasy.to/tv/${id}/${season}/${ep}`,
   },
+  {
+    id: "nxsha",
+    label: "Nxsha",
+    tag: null,
+    note: null,
+    supportsProgress: true,
+    colorParam: null,
+    langParam: null,
+    params: {},
+    movieUrl: (id) => `/api/nxsha-proxy/embed/movie/${id}`,
+    tvUrl: (id, season, ep) =>
+      `/api/nxsha-proxy/embed/tv/${id}/${season}/${ep}`,
+  },
+
   {
     id: "vidsrc",
     label: "VidSrc",
@@ -207,7 +209,7 @@ export const getSourceUrl = (
     PLAYER_SOURCES.find((s) => s.id === sourceId) ?? PLAYER_SOURCES[0];
   const baseUrl =
     type === "movie" ? src.movieUrl(id) : src.tvUrl(id, season, ep);
-  const url = new URL(baseUrl);
+  const url = new URL(baseUrl, window.location.origin);
 
   Object.entries(src.params || {}).forEach(([key, value]) => {
     url.searchParams.set(key, value);
