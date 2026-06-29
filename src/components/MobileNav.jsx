@@ -4,6 +4,7 @@ import {
   HistoryIcon,
   DownloadsQueueIcon,
   BackIcon,
+  CompassIcon,
 } from "./Icons";
 
 export default function MobileNav({
@@ -26,6 +27,12 @@ export default function MobileNav({
           label="Home"
         />
       )}
+      <MobileNavBtn
+        active={page === "discover"}
+        onClick={() => onNavigate("discover")}
+        icon={<CompassIcon />}
+        label="Discover"
+      />
       <MobileNavBtn onClick={onSearch} icon={<SearchIcon />} label="Search" />
       <MobileNavBtn
         active={page === "history"}

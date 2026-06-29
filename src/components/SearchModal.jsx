@@ -19,6 +19,8 @@ export default function SearchModal({ apiKey, onSelect, onClose, offline }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState(loadHistory);
+  const [filterType, setFilterType] = useState("all");
+  const [filterYear, setFilterYear] = useState("");
   const inputRef = useRef();
 
   useEffect(() => {
@@ -35,25 +37,48 @@ export default function SearchModal({ apiKey, onSelect, onClose, offline }) {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await tmdbFetch(
-          `/search/multi?query=${encodeURIComponent(query)}&page=1`,
-          apiKey,
-        );
-        if (mounted) {
-          setResults(
-            (data.results || [])
-              .filter((r) => r.media_type !== "person")
-              .slice(0, 12),
-          );
+        const q = encodeURIComponent(query);
+        let fetchedResults = [];
+
+        if (filterType === "all" && !filterYear) {
+          const data = await tmdbFetch(`/search/multi?query=${q}&page=1`, apiKey);
+          fetchedResults = (data.results || []).filter(r => r.media_type !== "person");
+        } else if (filterType === "movie" || filterType === "tv" || filterType === "anime" || filterYear) {
+          let movieResults = [];
+          let tvResults = [];
+
+          if (filterType === "all" || filterType === "movie") {
+            const movieUrl = `/search/movie?query=${q}&page=1${filterYear ? `&primary_release_year=${filterYear}` : ''}`;
+            const movieData = await tmdbFetch(movieUrl, apiKey);
+            movieResults = (movieData.results || []).map(r => ({ ...r, media_type: "movie" }));
+          }
+
+          if (filterType === "all" || filterType === "tv" || filterType === "anime") {
+            const tvUrl = `/search/tv?query=${q}&page=1${filterYear ? `&first_air_date_year=${filterYear}` : ''}`;
+            const tvData = await tmdbFetch(tvUrl, apiKey);
+            tvResults = (tvData.results || []).map(r => ({ ...r, media_type: "tv" }));
+
+            if (filterType === "anime") {
+              tvResults = tvResults.filter(r => r.original_language === "ja" && (r.genre_ids || []).includes(16));
+            }
+          }
+
+          fetchedResults = [...movieResults, ...tvResults].sort((a, b) => b.popularity - a.popularity);
         }
-      } catch {}
+
+        if (mounted) {
+          setResults(fetchedResults.slice(0, 12));
+        }
+      } catch (err) {
+        console.error(err);
+      }
       if (mounted) setLoading(false);
     }, 380);
     return () => {
       mounted = false;
       clearTimeout(timer);
     };
-  }, [query, apiKey]);
+  }, [query, apiKey, filterType, filterYear]);
 
   const addToHistory = useCallback((term) => {
     const trimmed = term.trim();
@@ -136,6 +161,26 @@ export default function SearchModal({ apiKey, onSelect, onClose, offline }) {
               <CloseIcon />
             </button>
           )}
+        </div>
+
+        <div style={{ display: "flex", gap: 10, padding: "10px 20px", borderBottom: "1px solid var(--border)", flexWrap: "wrap", alignItems: "center" }}>
+          <select 
+            value={filterType} 
+            onChange={(e) => setFilterType(e.target.value)}
+            style={{ background: "var(--surface3)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 6, outline: "none" }}
+          >
+            <option value="all">All</option>
+            <option value="movie">Movies</option>
+            <option value="tv">TV Shows</option>
+            <option value="anime">Anime</option>
+          </select>
+          <input 
+            type="number" 
+            placeholder="Year" 
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            style={{ background: "var(--surface3)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px", borderRadius: 6, width: 80, outline: "none" }}
+          />
         </div>
 
         <div className="search-results">

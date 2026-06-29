@@ -31,6 +31,7 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const MoviePage = lazy(() => import("./pages/MoviePage"));
 const TVPage = lazy(() => import("./pages/TVPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
+const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 import {
   checkForUpdatesWithFallback,
@@ -915,6 +916,12 @@ export default function App() {
                 onMarkWatched={markWatched}
                 onMarkUnwatched={markUnwatched}
                 onRemoveHistory={removeHistory}
+              />
+            )}
+            {page === "discover" && (
+              <DiscoverPage 
+                apiKey={apiKey}
+                onSelect={handleSelectResult} 
               />
             )}
             {page === "settings" && (
