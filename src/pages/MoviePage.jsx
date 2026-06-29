@@ -421,14 +421,6 @@ export default function MoviePage({
     };
   }, [playing, playerSource, dubMode]);
 
-  useEffect(() => {
-    if (!window.electron) return;
-    const handler = window.electron.onM3u8Found((url) => {
-      setM3u8Url((prev) => (prev !== url ? url : prev));
-    });
-    return () => window.electron.offM3u8Found(handler);
-  }, []);
-
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
     if (!showSourceMenu) return;
@@ -448,19 +440,6 @@ export default function MoviePage({
       document.removeEventListener("mousedown", handleClick);
     };
   }, [showSourceMenu]);
-
-  useEffect(() => {
-    if (!window.electron) return;
-    const handler = window.electron.onSubtitleFound(({ url, lang }) => {
-      // Only keep VTT, deduplicate per language (latest wins)
-      if (!url || !url.toLowerCase().includes(".vtt")) return;
-      setInterceptedSubs((prev) => {
-        const filtered = prev.filter((s) => s.lang !== lang);
-        return [...filtered, { url, lang: lang || "unknown" }];
-      });
-    });
-    return () => window.electron.offSubtitleFound(handler);
-  }, []);
 
   // Reset auto-mark guard when a new movie loads or watched state resets
   useEffect(() => {
@@ -626,28 +605,8 @@ export default function MoviePage({
   // Intercept fullscreen requests from embedded players (vidsrc / 2embed use
   // the native Fullscreen API which would otherwise fullscreen the entire app).
   // Videasy and AllManga handle fullscreen internally via CSS, skip those.
-  useEffect(() => {
-    if (!playing) return;
-    if (!NEEDS_INTERCEPT.includes(playerSource)) return;
-    const enterH = null;
-    const leaveH = null;
-    return () => {
-      
-      
-      document.documentElement.removeAttribute("data-player-fullscreen");
-    };
-  }, [playing, playerSource]);
 
   // ── PiP pop-out: navigate main webview away so only one stream is active ──
-  useEffect(() => {
-    if (!playing) return;
-    const openH = null;
-    const closeH = null;
-    return () => {
-      
-      
-    };
-  }, [playing]);
 
   const handleSetDownloaderFolder = useCallback((folder) => {
     setDownloaderFolder(folder);

@@ -796,14 +796,6 @@ export default function TVPage({
     };
   }, [playing, selectedEp, playerSource, selectedSeason, dubMode]);
 
-  useEffect(() => {
-    if (!window.electron) return;
-    const handler = window.electron.onM3u8Found((url) => {
-      setM3u8Url((prev) => (prev !== url ? url : prev));
-    });
-    return () => window.electron.offM3u8Found(handler);
-  }, []);
-
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
     if (!showSourceMenu) return;
@@ -1545,15 +1537,6 @@ export default function TVPage({
   }, [playing, playerSource]);
 
   // ── PiP pop-out: navigate main webview away so only one stream is active ──
-  useEffect(() => {
-    if (!playing) return;
-    const openH = null;
-    const closeH = null;
-    return () => {
-      
-      
-    };
-  }, [playing]);
 
   const effectiveYear =
     year ||

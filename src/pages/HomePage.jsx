@@ -317,6 +317,27 @@ export default function HomePage({
               >
                 <PlayIcon /> Watch Now
               </button>
+              <button
+                className="btn btn-secondary"
+                style={{ marginLeft: 12, backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                onClick={() => {
+                  const all = [...trending, ...trendingTV];
+                  if (all.length > 0) {
+                    const randomItem = all[Math.floor(Math.random() * all.length)];
+                    onSelect(randomItem);
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 8}}>
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <circle cx="15.5" cy="15.5" r="1.5"></circle>
+                  <circle cx="15.5" cy="8.5" r="1.5"></circle>
+                  <circle cx="8.5" cy="15.5" r="1.5"></circle>
+                  <circle cx="12" cy="12" r="1.5"></circle>
+                </svg>
+                Random Pick
+              </button>
             </div>
           </div>
 
