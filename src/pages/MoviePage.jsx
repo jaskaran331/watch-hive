@@ -298,6 +298,19 @@ export default function MoviePage({
     setWebviewLoading(true); // instantly blank the player on every source/item switch
   }, [item.id, playerSource, dubMode]);
 
+  // ── Auto-failover: if Nxsha doesn't load within 10s, switch to Videasy ──
+  useEffect(() => {
+    if (playerSource !== "nxsha") return;
+    const timer = setTimeout(() => {
+      // If still loading after 10s, the source is likely DNS-blocked
+      if (webviewLoading) {
+        console.warn("[Watch Hive] Nxsha timed out, auto-switching to Videasy");
+        setPlayerSource("videasy");
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [item.id, playerSource, webviewLoading]);
+
   // Fetch AniList data + auto-set source for anime/non-anime
   useEffect(() => {
     let mounted = true;

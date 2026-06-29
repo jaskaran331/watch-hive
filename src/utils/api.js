@@ -148,9 +148,9 @@ export const PLAYER_SOURCES = [
     colorParam: null,
     langParam: null,
     params: {},
-    movieUrl: (id) => `/api/nxsha?path=embed/movie/${id}`,
+    movieUrl: (id) => `https://web.nxsha.app/embed/movie/${id}`,
     tvUrl: (id, season, ep) =>
-      `/api/nxsha?path=embed/tv/${id}/${season}/${ep}`,
+      `https://web.nxsha.app/embed/tv/${id}/${season}/${ep}`,
   },
 
   {

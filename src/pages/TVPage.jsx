@@ -659,6 +659,18 @@ export default function TVPage({
     dubMode,
   ]);
 
+  // ── Auto-failover: if Nxsha doesn't load within 10s, switch to Videasy ──
+  useEffect(() => {
+    if (playerSource !== "nxsha") return;
+    const timer = setTimeout(() => {
+      if (webviewLoading) {
+        console.warn("[Watch Hive] Nxsha timed out, auto-switching to Videasy");
+        setPlayerSource("videasy");
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [item.id, selectedEp?.episode_number, selectedSeason, playerSource, webviewLoading]);
+
   // Fetch AniList metadata + auto-set anime source
   useEffect(() => {
     let mounted = true;
