@@ -2,7 +2,6 @@ import {
   HomeIcon,
   SearchIcon,
   HistoryIcon,
-  DownloadsQueueIcon,
   BackIcon,
   CompassIcon,
 } from "./Icons";
@@ -40,13 +39,7 @@ export default function MobileNav({
         icon={<HistoryIcon />}
         label="Library"
       />
-      <MobileNavBtn
-        active={page === "downloads"}
-        onClick={() => onNavigate("downloads")}
-        icon={<DownloadsQueueIcon />}
-        label="Downloads"
-        badge={activeDownloads > 0 ? activeDownloads : null}
-      />
+
     </div>
   );
 }
