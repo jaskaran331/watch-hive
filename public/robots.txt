@@ -1,4 +1,4 @@
-User-agent: *  
-Allow: /  
-  
-Sitemap: https://watch-hive.vercel.app/sitemap.xml 
+User-agent: *
+Allow: /
+
+Sitemap: https://watchhive1.vercel.app/sitemap.xml

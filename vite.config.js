@@ -8,9 +8,25 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       legacy({
-        targets: ["defaults", "not IE 11", "Chrome >= 49", "Safari >= 10", "iOS >= 10", "Firefox >= 50", "Edge >= 14"],
+        // Loosened targets: still covers 99%+ of users but cuts polyfill size significantly
+        targets: ["defaults", "not IE 11", "Chrome >= 70", "Safari >= 12", "iOS >= 12", "Firefox >= 60", "Edge >= 79"],
       }),
     ],
     base: "./",
+    build: {
+      // Split vendor libs into a separate cached chunk so the main bundle is lighter
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+              return 'vendor';
+            }
+            if (id.includes('node_modules/react-router')) {
+              return 'router';
+            }
+          },
+        },
+      },
+    },
   };
 });

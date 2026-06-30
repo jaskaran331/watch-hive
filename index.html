@@ -4,26 +4,120 @@
         <meta name="google-site-verification" content="gWs8sVnHkyLYLTNglBzOiQ095D4lcH07Rjzki5MSsdo" />
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Watch Hive</title>
-        <meta name="description" content="Watch Hive is a sleek, premium web application for streaming movies and TV shows." />
-        <meta name="keywords" content="movies, tv shows, streaming, watch online, cinema, watch hive" />
+        <title>WatchHive — Stream Movies & TV Shows Online Free</title>
+        <meta name="description" content="WatchHive is a free, premium streaming app to discover and watch movies, TV shows, and anime. Browse trending titles, track your watchlist, and enjoy a sleek, ad-free experience." />
+        <meta name="keywords" content="watch movies online free, stream tv shows, free movie streaming, anime streaming, watchhive, watch hive, movie app, tv show tracker" />
         <meta name="robots" content="index, follow" />
-        
+        <meta name="theme-color" content="#0d0d0d" />
+
+        <!-- Canonical URL -->
+        <link rel="canonical" href="https://watchhive1.vercel.app/" />
+
         <!-- OpenGraph Meta Tags -->
-        <meta property="og:title" content="Watch Hive" />
-        <meta property="og:description" content="A sleek, premium web application for streaming movies and TV shows." />
+        <meta property="og:title" content="WatchHive — Stream Movies & TV Shows Online Free" />
+        <meta property="og:description" content="Discover and stream movies, TV shows, and anime for free. Browse trending titles, build your watchlist, and enjoy a premium viewing experience." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://watch-hive.vercel.app/" />
-        
+        <meta property="og:url" content="https://watchhive1.vercel.app/" />
+        <meta property="og:image" content="https://watchhive1.vercel.app/icon.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <meta property="og:site_name" content="WatchHive" />
+
         <!-- Twitter Meta Tags -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Watch Hive" />
-        <meta name="twitter:description" content="A sleek, premium web application for streaming movies and TV shows." />
+        <meta name="twitter:title" content="WatchHive — Stream Movies & TV Shows Online Free" />
+        <meta name="twitter:description" content="Discover and stream movies, TV shows, and anime for free. Premium streaming experience with no ads." />
+        <meta name="twitter:image" content="https://watchhive1.vercel.app/icon.png" />
 
+        <!-- Favicon + PWA -->
         <link rel="icon" type="image/png" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+
+        <!-- Preconnect: shave 200-400ms off first TMDB API + image requests on mobile -->
+        <link rel="preconnect" href="https://api.themoviedb.org" crossorigin />
+        <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+        <link rel="dns-prefetch" href="https://api.themoviedb.org" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
+
+        <!-- JSON-LD Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "WatchHive",
+            "url": "https://watchhive1.vercel.app/",
+            "description": "A free, premium streaming app to discover and watch movies, TV shows, and anime online.",
+            "applicationCategory": "EntertainmentApplication",
+            "operatingSystem": "Any",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "WatchHive"
+            }
+        }
+        </script>
+
+        <!-- Inline loading spinner: renders instantly before any JS downloads/parses -->
+        <style>
+            body { margin: 0; background: #0d0d0d; }
+            #app-loader {
+                position: fixed;
+                inset: 0;
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: #0d0d0d;
+                transition: opacity 0.3s ease;
+            }
+            #app-loader.fade-out {
+                opacity: 0;
+                pointer-events: none;
+            }
+            #app-loader svg {
+                width: 48px;
+                height: 48px;
+                animation: loader-spin 0.8s linear infinite;
+            }
+            #app-loader p {
+                margin-top: 16px;
+                color: #888;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                letter-spacing: 0.5px;
+            }
+            @keyframes loader-spin {
+                to { transform: rotate(360deg); }
+            }
+            @keyframes loader-pulse {
+                0%, 100% { opacity: 0.4; }
+                50% { opacity: 1; }
+            }
+        </style>
     </head>
     <body>
+        <!-- Loading screen: visible instantly, hidden once React mounts -->
+        <div id="app-loader">
+            <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" stroke="#ffc107" stroke-width="4"
+                    stroke-linecap="round" stroke-dasharray="80 51"/>
+            </svg>
+            <p style="animation: loader-pulse 1.5s ease-in-out infinite;">Loading WatchHive…</p>
+        </div>
         <div id="root"></div>
         <script type="module" src="/src/main.jsx"></script>
+        <noscript>
+            <div style="color:#ccc;text-align:center;padding:48px;font-family:sans-serif;">
+                <h1>WatchHive</h1>
+                <p>JavaScript is required to run this app. Please enable JavaScript in your browser settings.</p>
+            </div>
+        </noscript>
     </body>
 </html>

@@ -768,7 +768,23 @@ export default function App() {
     [navigate],
   );
 
-  if (!apiKeyLoaded) return null; // wait for secure storage to resolve
+  // Dismiss the HTML preloader once React has mounted
+  useEffect(() => {
+    const loader = document.getElementById('app-loader');
+    if (loader) {
+      loader.classList.add('fade-out');
+      setTimeout(() => loader.remove(), 350);
+    }
+  }, []);
+
+  if (!apiKeyLoaded) {
+    // Show a spinner instead of a blank screen while the API key loads
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg1, #0d0d0d)' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
   if (!apiKey && !skipped)
     return <SetupScreen onSave={saveApiKey} onSkip={() => setSkipped(true)} />;
 
@@ -832,13 +848,14 @@ export default function App() {
             fallback={
               <div
                 style={{
-                  color: "var(--text2)",
-                  padding: 48,
-                  textAlign: "center",
-                  fontSize: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 64,
+                  minHeight: 200,
                 }}
               >
-                Laden…
+                <div className="spinner" />
               </div>
             }
           >

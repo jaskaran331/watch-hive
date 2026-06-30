@@ -1,0 +1,22 @@
+{
+  "name": "WatchHive",
+  "short_name": "WatchHive",
+  "description": "Stream movies, TV shows, and anime for free",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
