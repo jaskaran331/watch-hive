@@ -55,6 +55,9 @@ window.electron = {
 
 import { HelmetProvider } from "react-helmet-async";
 import { Analytics } from "@vercel/analytics/react";
+import { injectSpeedInsights } from "@vercel/speed-insights";
+
+injectSpeedInsights();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
