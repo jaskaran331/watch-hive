@@ -391,6 +391,8 @@ export default function TVPage({
   const [showTrailer, setShowTrailer] = useState(false);
   const [m3u8Url, setM3u8Url] = useState(null);
   const [interceptedSubs, setInterceptedSubs] = useState([]);
+  const [actualSource, setActualSource] = useState(null);
+  const [resolvingAuto, setResolvingAuto] = useState(false);
   const [playerSource, setPlayerSource] = useState(
     () => storage.get("playerSource") || NON_ANIME_DEFAULT_SOURCE,
   );
@@ -400,13 +402,13 @@ export default function TVPage({
   const playerSubLang = playerSettings?.subtitleLang ?? null;
   const [showSourceMenu, setShowSourceMenu] = useState(false);
   // Derived from playerSource, computed once per render instead of 5-6× inline
-  const isAsync = useMemo(() => sourceIsAsync(playerSource), [playerSource]);
+  const isAsync = useMemo(() => sourceIsAsync(actualSource), [playerSource]);
   const supportsProgress = useMemo(
-    () => sourceSupportsProgress(playerSource),
+    () => sourceSupportsProgress(actualSource),
     [playerSource],
   );
   const progressViaFrames = useMemo(
-    () => sourceProgressViaFrames(playerSource),
+    () => sourceProgressViaFrames(actualSource),
     [playerSource],
   );
   const [dubMode, setDubMode] = useState(
@@ -723,7 +725,7 @@ export default function TVPage({
     // this episode, skip straight to the cached fallback source.
     if (isAsync) {
       const cached = getFailoverSource(epKey);
-      if (cached && cached !== playerSource) {
+      if (cached && cached !== actualSource) {
         setM3u8Url(null);
         setInterceptedSubs([]);
         resolvedPlayerUrlRef.current = null;
@@ -806,7 +808,7 @@ export default function TVPage({
     return () => {
       mounted = false;
     };
-  }, [playing, selectedEp, playerSource, selectedSeason, dubMode]);
+  }, [playing, selectedEp, actualSource, selectedSeason, dubMode]);
 
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
@@ -1728,7 +1730,7 @@ export default function TVPage({
                     <span style={{ fontSize: 14, color: "var(--text2)" }}>
                       {resolvingUrl
                         ? "Looking up episode on AllManga…"
-                        : `Loading ${PLAYER_SOURCES.find((s) => s.id === playerSource)?.label ?? "source"}…`}
+                        : `Loading ${PLAYER_SOURCES.find((s) => s.id === (actualSource || playerSource))?.label ?? "source"}…`}
                     </span>
                   </div>
                 )}
@@ -1983,7 +1985,7 @@ export default function TVPage({
                       : isAsync
                         ? resolvedPlayerUrl || "about:blank"
                         : getSourceUrl(
-                            playerSource,
+                        actualSource,
                             "tv",
                             item.id,
                             playerEp.season,
@@ -2006,7 +2008,7 @@ export default function TVPage({
                     boxShadow: "none",
                     background: "black",
                     visibility:
-                      webviewLoading || (isAsync && !resolvedPlayerUrl)
+                      webviewLoading || resolvingAuto || !actualSource || (isAsync && !resolvedPlayerUrl)
                         ? "hidden"
                         : "visible",
                   }}
@@ -2026,7 +2028,7 @@ export default function TVPage({
                     title="Change source"
                   >
                     <SourceIcon />
-                    {PLAYER_SOURCES.find((s) => s.id === playerSource)?.label ??
+                    {PLAYER_SOURCES.find((s) => s.id === (actualSource || playerSource))?.label ??
                       "Source"}
                   </button>
                   {/* Sub/Dub toggle, only for AllManga */}
@@ -2077,7 +2079,7 @@ export default function TVPage({
                       const url = isAsync
                         ? resolvedPlayerUrl
                         : getSourceUrl(
-                            playerSource,
+                        actualSource,
                             "tv",
                             item.id,
                             playerEp.season,
@@ -2087,7 +2089,8 @@ export default function TVPage({
                             playerSubLang,
                           );
                       if (!url) return;
-                      pipUrlRef.current = url;
+                      if (!actualSource) return;
+                  pipUrlRef.current = url;
                       window.electron?.openPipWindow?.(
                         url,
                         item.name ?? item.title,
@@ -2096,7 +2099,7 @@ export default function TVPage({
                     title={pipOpen ? "Close pop-out" : "Pop out player"}
                     disabled={
                       !pipOpen &&
-                      (webviewLoading || !!(isAsync && !resolvedPlayerUrl))
+                      (webviewLoading || resolvingAuto || !actualSource || !!(isAsync && !resolvedPlayerUrl))
                     }
                     style={pipOpen ? { color: "var(--red)" } : undefined}
                   >

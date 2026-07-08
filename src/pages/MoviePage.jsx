@@ -87,6 +87,8 @@ export default function MoviePage({
   const [showTrailer, setShowTrailer] = useState(false);
   const [m3u8Url, setM3u8Url] = useState(null);
   const [interceptedSubs, setInterceptedSubs] = useState([]);
+  const [actualSource, setActualSource] = useState(null);
+  const [resolvingAuto, setResolvingAuto] = useState(false);
   const [playerSource, setPlayerSource] = useState(
     () => storage.get("playerSource") || NON_ANIME_DEFAULT_SOURCE,
   );
@@ -96,7 +98,7 @@ export default function MoviePage({
   const playerAccentColor = playerSettings?.accentColor ?? null;
   const playerSubLang = playerSettings?.subtitleLang ?? null;
   const progressViaFrames = useMemo(
-    () => sourceProgressViaFrames(playerSource),
+    () => sourceProgressViaFrames(actualSource),
     [playerSource],
   );
   const [showSourceMenu, setShowSourceMenu] = useState(false);
@@ -341,6 +343,23 @@ export default function MoviePage({
     };
   }, [item.id, isAnime]);
 
+  // Auto-resolve best server
+  useEffect(() => {
+    if (!playing || playerSource !== "auto") {
+      if (playerSource !== "auto") setActualSource(playerSource);
+      return;
+    }
+    let mounted = true;
+    setResolvingAuto(true);
+    setResolveError(null);
+    findBestServer(isAnime, "movie", item.id, null, null).then((best) => {
+      if (!mounted) return;
+      setActualSource(best);
+      setResolvingAuto(false);
+    });
+    return () => { mounted = false; };
+  }, [playing, playerSource, isAnime, item.id]);
+
   // Resolve AllManga movie URL via main-process IPC
   useEffect(() => {
     if (!playing) return;
@@ -348,9 +367,9 @@ export default function MoviePage({
 
     // Auto-failover: if a previous attempt taught us AllManga doesn't have
     // this title, skip straight to the cached fallback source.
-    if (sourceIsAsync(playerSource)) {
+    if (sourceIsAsync(actualSource)) {
       const cached = getFailoverSource(epKey);
-      if (cached && cached !== playerSource) {
+      if (cached && cached !== actualSource) {
         setM3u8Url(null);
         setInterceptedSubs([]);
         resolvedPlayerUrlRef.current = null;
@@ -363,7 +382,7 @@ export default function MoviePage({
       }
     }
 
-    if (!sourceIsAsync(playerSource)) return;
+    if (!sourceIsAsync(actualSource)) return;
     // Use refs as guards
     if (resolvedPlayerUrlRef.current || resolvingUrlRef.current) return;
     resolvingUrlRef.current = true;
@@ -432,7 +451,7 @@ export default function MoviePage({
     return () => {
       mounted = false;
     };
-  }, [playing, playerSource, dubMode]);
+  }, [playing, actualSource, dubMode]);
 
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
@@ -492,11 +511,11 @@ export default function MoviePage({
       wv.removeEventListener("did-finish-load", done);
       wv.removeEventListener("did-fail-load", done);
     };
-  }, [playing, playerSource, item.id]);
+  }, [playing, actualSource, item.id]);
 
   // ── Auto-track progress + auto-watched every 5s ──────────────────────────
   useEffect(() => {
-    if (!playing || !sourceSupportsProgress(playerSource)) return;
+    if (!playing || !sourceSupportsProgress(actualSource)) return;
     let interval = null;
     const timer = setTimeout(() => {
       interval = setInterval(async () => {
@@ -583,7 +602,7 @@ export default function MoviePage({
       clearTimeout(timer);
       clearInterval(interval);
     };
-  }, [playing, progressKey, watchedThreshold, playerSource, progressViaFrames]);
+  }, [playing, progressKey, watchedThreshold, actualSource, progressViaFrames]);
 
   const handlePlay = useCallback(() => {
     setM3u8Url(null);
@@ -859,14 +878,16 @@ export default function MoviePage({
               >
                 <div className="spinner" />
                 <span style={{ fontSize: 14, color: "var(--text2)" }}>
-                  {resolvingUrl
+                  {resolvingAuto
+                    ? "Finding best server..."
+                    : resolvingUrl
                     ? "Looking up movie on AllManga…"
-                    : `Loading ${PLAYER_SOURCES.find((s) => s.id === playerSource)?.label ?? "source"}…`}
+                    : `Loading ${PLAYER_SOURCES.find((s) => s.id === (actualSource || playerSource))?.label ?? "source"}…`}
                 </span>
               </div>
             )}
             {/* AllManga: error if lookup failed */}
-            {sourceIsAsync(playerSource) && resolveError && !resolvingUrl && (
+            {sourceIsAsync(actualSource) && resolveError && !resolvingUrl && (
               <div
                 style={{
                   position: "absolute",
@@ -943,10 +964,10 @@ export default function MoviePage({
               src={
                 pipOpen
                   ? "about:blank"
-                  : sourceIsAsync(playerSource)
+                  : sourceIsAsync(actualSource)
                     ? resolvedPlayerUrl || "about:blank"
                     : getSourceUrl(
-                        playerSource,
+                        actualSource,
                         "movie",
                         item.id,
                         null,
@@ -966,8 +987,8 @@ export default function MoviePage({
                 height: "100%",
                 border: "none",
                 visibility:
-                  webviewLoading ||
-                  (sourceIsAsync(playerSource) && !resolvedPlayerUrl)
+                  webviewLoading || resolvingAuto || !actualSource ||
+                  (sourceIsAsync(actualSource) && !resolvedPlayerUrl)
                     ? "hidden"
                     : "visible",
               }}
@@ -986,11 +1007,11 @@ export default function MoviePage({
                 title="Change source"
               >
                 <SourceIcon />
-                {PLAYER_SOURCES.find((s) => s.id === playerSource)?.label ??
+                {PLAYER_SOURCES.find((s) => s.id === (actualSource || playerSource))?.label ??
                   "Source"}
               </button>
               {/* Sub/Dub toggle, only for async (AllManga) sources */}
-              {sourceIsAsync(playerSource) && (
+              {sourceIsAsync(actualSource) && (
                 <button
                   className="player-overlay-btn"
                   onClick={() => {
@@ -1032,10 +1053,10 @@ export default function MoviePage({
                     window.electron?.closePipWindow?.();
                     return;
                   }
-                  const url = sourceIsAsync(playerSource)
+                  const url = sourceIsAsync(actualSource)
                     ? resolvedPlayerUrl
                     : getSourceUrl(
-                        playerSource,
+                        actualSource,
                         "movie",
                         item.id,
                         null,
@@ -1045,14 +1066,15 @@ export default function MoviePage({
                         playerSubLang,
                       );
                   if (!url) return;
+                  if (!actualSource) return;
                   pipUrlRef.current = url;
                   window.electron?.openPipWindow?.(url, item.title);
                 }}
                 title={pipOpen ? "Close pop-out" : "Pop out player"}
                 disabled={
                   !pipOpen &&
-                  (webviewLoading ||
-                    !!(sourceIsAsync(playerSource) && !resolvedPlayerUrl))
+                  (webviewLoading || resolvingAuto || !actualSource ||
+                    !!(sourceIsAsync(actualSource) && !resolvedPlayerUrl))
                 }
                 style={pipOpen ? { color: "var(--red)" } : undefined}
               >
@@ -1101,7 +1123,7 @@ export default function MoviePage({
                 ))}
               </div>
             )}
-              {!sourceSupportsProgress(playerSource) && (
+              {!sourceSupportsProgress(actualSource) && (
                 <span
                   className="player-no-progress-hint"
                   title="No automatic progress tracking for this source"

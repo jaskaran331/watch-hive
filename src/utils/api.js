@@ -139,6 +139,13 @@ export const tmdbFetch = async (path, apiKey, options = {}) => {
 // supportsProgress: true = executeJavaScript tracking works for this source
 export const PLAYER_SOURCES = [
   {
+    id: "auto",
+    label: "Auto (Best Server)",
+    tag: null,
+    note: "Automatically selects the fastest server",
+    supportsProgress: true, // We'll delegate to the actual source
+  },
+  {
     id: "videasy",
     label: "Videasy",
     tag: null,
@@ -480,8 +487,8 @@ export const isAnimeContent = (item, details) => {
 };
 
 // Default sources
-export const ANIME_DEFAULT_SOURCE = "allmanga";
-export const NON_ANIME_DEFAULT_SOURCE = "vidking";
+export const ANIME_DEFAULT_SOURCE = "auto";
+export const NON_ANIME_DEFAULT_SOURCE = "auto";
 
 // ── Episode Group fetch (localStorage + in-memory cache, 7-day TTL) ─────────
 // Episode groups almost never change -> cache aggressively across sessions.
