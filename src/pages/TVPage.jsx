@@ -683,6 +683,39 @@ export default function TVPage({
     return () => clearTimeout(timer);
   }, [item.id, selectedEp?.episode_number, selectedSeason, playerSource, webviewLoading, playing, isAnime]);
 
+  // ── Fast 404 Verification via API (Bypass CORS) ──
+  useEffect(() => {
+    if (!playing || sourceIsAsync(playerSource)) return;
+    let mounted = true;
+    const checkUrl = getSourceUrl(
+      playerSource,
+      "tv",
+      item.id,
+      selectedSeason,
+      selectedEp?.episode_number,
+      {},
+      playerAccentColor,
+      playerSubLang,
+    );
+
+    fetch(`/api/check?url=${encodeURIComponent(checkUrl)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (mounted && data.status === 404) {
+          console.warn(`[WatchHive] ${playerSource} returned 404. Auto-failover triggered!`);
+          serverEngine.reportFailure(playerSource);
+          const next = serverEngine.getNextBest(playerSource, isAnime);
+          if (next && failoverCountRef.current < PLAYER_SOURCES.length) {
+            failoverCountRef.current += 1;
+            setPlayerSource(next);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => { mounted = false; };
+  }, [item.id, selectedEp?.episode_number, selectedSeason, playerSource, playing, isAnime, playerAccentColor, playerSubLang]);
+
   // Reset failover counter when item changes
   useEffect(() => {
     failoverCountRef.current = 0;
