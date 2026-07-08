@@ -1214,7 +1214,6 @@ const CollectionCard = memo(function CollectionCard({
   onMarkWatched,
   onMarkUnwatched,
 }) {
-  const handleClick = useCallback(() => onSelect(part), [onSelect, part]);
   return (
     <div
       style={{
@@ -1224,7 +1223,7 @@ const CollectionCard = memo(function CollectionCard({
     >
       <MediaCard
         item={part}
-        onClick={handleClick}
+        onClick={onSelect}
         progress={progress}
         watched={watched}
         onMarkWatched={onMarkWatched}
