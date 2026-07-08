@@ -644,6 +644,13 @@ export default function MoviePage({
     setInterceptedSubs([]);
     setPlaying(true);
     onHistory({ ...d, media_type: "movie" });
+    
+    // Auto-scroll to player
+    setTimeout(() => {
+      if (playerWrapRef.current) {
+        playerWrapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
   }, [d, onHistory]);
 
   // Intercept fullscreen requests from embedded players (vidsrc / 2embed use
