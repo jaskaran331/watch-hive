@@ -135,6 +135,20 @@ export default function LibraryPage({
                   ? `movie_${item.id}`
                   : `tv_${item.id}_s${item.season}e${item.episode}`;
               const isWatched = !!watched?.[pk];
+              const pct = progress?.[pk] || 0;
+              const dlTime = storage.get("dlTime_" + pk);
+              let resumeText = "";
+              if (!isWatched && dlTime > 0) {
+                const h = Math.floor(dlTime / 3600);
+                const m = Math.floor((dlTime % 3600) / 60);
+                const sec = Math.floor(dlTime % 60);
+                const formatted =
+                  h > 0
+                    ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+                    : `${m}:${String(sec).padStart(2, "0")}`;
+                resumeText = ` · Resumes at ${formatted}`;
+              }
+
               return (
                 <div
                   key={`${pk}_${item.watchedAt}`}
@@ -174,7 +188,16 @@ export default function LibraryPage({
                         month: "short",
                         day: "numeric",
                       })}
+                      {resumeText}
                     </div>
+                    {pct > 0 && !isWatched && (
+                      <div className="history-progress-bar">
+                        <div
+                          className="history-progress-fill"
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <span
                     className={`search-result-type ${item.media_type === "tv" ? "type-tv" : "type-movie"}`}

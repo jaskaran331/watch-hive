@@ -4417,3 +4417,18 @@ html[data-win-titlebar][data-maximized] .main {
 .search-input:focus {
     outline: none !important;
 }
+
+.history-progress-bar {
+    margin-top: 6px;
+    height: 3px;
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.history-progress-fill {
+    height: 100%;
+    background: var(--red);
+    transition: width 0.3s;
+}
