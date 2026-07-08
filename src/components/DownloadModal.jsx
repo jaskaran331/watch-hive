@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../utils/security";
 import { useState, useEffect, useCallback } from "react";
 import { CloseIcon, DownloadIcon, SettingsIcon, SubtitlesIcon } from "./Icons";
 import {
@@ -1064,7 +1065,7 @@ export default function DownloadModal({
                         onClick={(e) => {
                           e.preventDefault();
                           isElectron &&
-                            window.electron.openExternal(releaseUrl);
+                            openExternalSafe(releaseUrl);
                         }}
                       >
                         github.com/truelockmc/vid-dl-cli-only/releases/latest

@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../utils/security";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { CloseIcon, ExternalLinkIcon } from "./Icons";
 import { storage } from "../utils/storage";
@@ -104,7 +105,7 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
   const openInBrowser = () => {
     const preferred = getInvidiousBase();
     const url = `${preferred}/watch?v=${trailerKey}`;
-    window.electron?.openExternal(url);
+    openExternalSafe(url);
   };
 
   useEffect(() => {
@@ -132,7 +133,7 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
       const instanceBase = currentSrc.split("/embed/")[0];
       if (!e.url.startsWith(instanceBase)) {
         e.preventDefault();
-        window.electron?.openExternal(e.url);
+        openExternalSafe(e.url);
       }
     };
 

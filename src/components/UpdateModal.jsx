@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../utils/security";
 import { useState, useEffect, useRef } from "react";
 
 // ── Image component that proxies through Electron main process ────────────────
@@ -107,7 +108,7 @@ function inlineFormat(text) {
             href={mm[2]}
             onClick={(e) => {
               e.preventDefault();
-              window.electron?.openExternal(mm[2]);
+              openExternalSafe(mm[2]);
             }}
             style={{
               color: "var(--red)",
@@ -127,7 +128,7 @@ function inlineFormat(text) {
           href={`https://github.com/${username}`}
           onClick={(e) => {
             e.preventDefault();
-            window.electron?.openExternal(`https://github.com/${username}`);
+            openExternalSafe(`https://github.com/${username}`);
           }}
           style={{
             color: "var(--red)",
@@ -154,7 +155,7 @@ function inlineFormat(text) {
           href={raw}
           onClick={(e) => {
             e.preventDefault();
-            window.electron?.openExternal(raw);
+            openExternalSafe(raw);
           }}
           style={{
             color: "var(--red)",
@@ -605,7 +606,7 @@ export default function UpdateModal({
                   href={url}
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electron?.openExternal(url);
+                    openExternalSafe(url);
                   }}
                   style={{
                     color: "var(--red)",
@@ -724,7 +725,7 @@ export default function UpdateModal({
                 href={url}
                 onClick={(e) => {
                   e.preventDefault();
-                  window.electron?.openExternal(url);
+                  openExternalSafe(url);
                 }}
                 style={{ color: "var(--red)", cursor: "pointer" }}
               >
@@ -792,7 +793,7 @@ export default function UpdateModal({
                   href={url}
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electron?.openExternal(url);
+                    openExternalSafe(url);
                   }}
                   style={{
                     color: "var(--red)",
@@ -824,7 +825,7 @@ export default function UpdateModal({
                   href={url}
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electron?.openExternal(url);
+                    openExternalSafe(url);
                   }}
                   style={{
                     display: "inline-flex",

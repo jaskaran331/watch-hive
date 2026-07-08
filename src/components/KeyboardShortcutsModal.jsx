@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../utils/security";
 // Keyboard Shortcuts reference modal
 export default function KeyboardShortcutsModal({ onClose }) {
   const shortcuts = [
@@ -156,7 +157,7 @@ export default function KeyboardShortcutsModal({ onClose }) {
             href="https://github.com/truelockmc/Watch Hive"
             onClick={(e) => {
               e.preventDefault();
-              window.electron?.openExternal(
+              openExternalSafe(
                 "https://github.com/truelockmc/Watch Hive",
               );
             }}

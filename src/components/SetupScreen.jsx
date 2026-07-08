@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../utils/security";
 import { useState, useEffect, useRef } from "react";
 import { StreambertLogo, PlayIcon } from "./Icons";
 
@@ -78,7 +79,7 @@ function ExternalLink({ href, className, children }) {
       href={href}
       onClick={(e) => {
         e.preventDefault();
-        window.electron.openExternal(href);
+        openExternalSafe(href);
       }}
     >
       {children}

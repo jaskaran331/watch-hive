@@ -1,3 +1,4 @@
+import { openExternalSafe } from "../../utils/security";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { 
   Check, ChevronDown, Download, FolderOpen, RefreshCcw, 
@@ -80,7 +81,7 @@ export function SubtitleSettingsSection() {
             textDecoration: "underline",
           }}
           onClick={() =>
-            window.electron?.openExternal("https://subdl.com/settings")
+            openExternalSafe("https://subdl.com/settings")
           }
         >
           SubDL API key
@@ -190,7 +191,7 @@ export function SubtitleSettingsSection() {
                   cursor: "pointer",
                 }}
                 onClick={() =>
-                  window.electron?.openExternal(
+                  openExternalSafe(
                     "https://github.com/truelockmc/streambert/wyzie-tutorial.md",
                   )
                 }
@@ -236,7 +237,7 @@ export function SubtitleSettingsSection() {
                   className="btn btn-ghost"
                   style={{ padding: "6px 12px", fontSize: 12 }}
                   onClick={() =>
-                    window.electron?.openExternal(
+                    openExternalSafe(
                       `https://store.wyzie.io/dashboard?key=${wyzieApiKey.trim()}`,
                     )
                   }
@@ -261,7 +262,7 @@ export function SubtitleSettingsSection() {
                   fontSize: 11,
                 }}
                 onClick={() =>
-                  window.electron?.openExternal("https://subdl.com/settings")
+                  openExternalSafe("https://subdl.com/settings")
                 }
               >
                 (free, register at subdl.com ↗)
