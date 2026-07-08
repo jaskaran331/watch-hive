@@ -72,9 +72,17 @@ export default function App() {
   const [episodeCheckStatus, setEpisodeCheckStatus] = useState(null);
   const episodeDismissTimerRef = useRef(null);
 
-  const [trending, setTrending] = useState([]);
-  const [trendingTV, setTrendingTV] = useState([]);
-  const [loadingHome, setLoadingHome] = useState(false);
+  const [trending, setTrending] = useState(() => {
+    const cached = storage.get("trendingCache");
+    const currentLang = storage.get(STORAGE_KEYS.TMDB_LANG) || "en-US";
+    return (cached && cached.lang === currentLang && Date.now() - cached.ts < 30 * 60 * 1000) ? (cached.movies || []) : [];
+  });
+  const [trendingTV, setTrendingTV] = useState(() => {
+    const cached = storage.get("trendingCache");
+    const currentLang = storage.get(STORAGE_KEYS.TMDB_LANG) || "en-US";
+    return (cached && cached.lang === currentLang && Date.now() - cached.ts < 30 * 60 * 1000) ? (cached.tv || []) : [];
+  });
+  const [loadingHome, setLoadingHome] = useState(() => trending.length === 0);
   const [offline, setOffline] = useState(() => !navigator.onLine);
 
   // ── Player accent + subtitle lang ─────────────────────────────────────────

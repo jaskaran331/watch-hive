@@ -3,7 +3,7 @@
     src: url("fonts/bebas-neue-regular.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -11,7 +11,7 @@
     src: url("fonts/dm-sans-300.woff2") format("woff2");
     font-weight: 300;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -19,7 +19,7 @@
     src: url("fonts/dm-sans-regular.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -27,7 +27,7 @@
     src: url("fonts/dm-sans-500.woff2") format("woff2");
     font-weight: 500;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -35,7 +35,7 @@
     src: url("fonts/dm-sans-600.woff2") format("woff2");
     font-weight: 600;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 *,

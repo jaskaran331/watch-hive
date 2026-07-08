@@ -105,6 +105,10 @@ const MediaCard = memo(function MediaCard({
               src={imgUrl(item.poster_path, "w342")}
               alt={title}
               loading="lazy"
+              decoding="async"
+              width="342"
+              height="513"
+              style={{ aspectRatio: "2 / 3" }}
             />
           ) : (
             <div className="no-poster">

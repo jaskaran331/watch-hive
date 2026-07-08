@@ -97,6 +97,10 @@ const CarouselSlot = memo(function CarouselSlot({
             className="carousel-poster"
             draggable={false}
             loading={abs > 1 ? "lazy" : "eager"}
+            decoding="async"
+            width="342"
+            height="513"
+            style={{ aspectRatio: "2 / 3" }}
           />
         ) : (
           <div className="carousel-poster carousel-poster--placeholder">
