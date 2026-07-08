@@ -24,6 +24,7 @@ import {
   NEEDS_INTERCEPT,
   getNextNonAsyncSource,
 } from "../utils/api";
+import { serverEngine } from "../utils/serverEngine";
 import {
   PlayIcon,
   BookmarkIcon,
@@ -90,6 +91,10 @@ export default function MoviePage({
   const [playerSource, setPlayerSource] = useState(
     () => storage.get("playerSource") || NON_ANIME_DEFAULT_SOURCE,
   );
+  // Track iframe load start time for the server engine
+  const loadStartRef = useRef(0);
+  // Track how many consecutive failovers we've attempted to avoid infinite loops
+  const failoverCountRef = useRef(0);
 
   // Accent colour + subtitle lang come from App-level state (via props),
   // so they are always fresh after Settings save without any extra storage reads.
@@ -296,20 +301,36 @@ export default function MoviePage({
     setResolvingUrl(false);
     setResolveError(null);
     setWebviewLoading(true); // instantly blank the player on every source/item switch
+    loadStartRef.current = Date.now(); // start timing the load
   }, [item.id, playerSource, dubMode]);
 
-  // ── Auto-failover: if Nxsha doesn't load within 10s, switch to Videasy ──
+  // ── Universal auto-failover: if ANY server doesn't load within 8s, switch to next best ──
   useEffect(() => {
-    if (playerSource !== "nxsha") return;
+    if (!playing || !webviewLoading) return;
+    if (sourceIsAsync(playerSource)) return; // async sources have their own flow
     const timer = setTimeout(() => {
-      // If still loading after 10s, the source is likely DNS-blocked
-      if (webviewLoading) {
-        console.warn("[Watch Hive] Nxsha timed out, auto-switching to Videasy");
-        setPlayerSource("videasy");
+      if (!webviewLoading) return;
+      // Server timed out — penalize it and try the next best
+      serverEngine.reportFailure(playerSource);
+      const next = serverEngine.getNextBest(playerSource, isAnime);
+      if (next && failoverCountRef.current < PLAYER_SOURCES.length) {
+        console.warn(`[WatchHive] ${playerSource} timed out, auto-switching to ${next}`);
+        failoverCountRef.current += 1;
+        setPlayerSource(next);
       }
-    }, 10000);
+    }, 8000);
     return () => clearTimeout(timer);
-  }, [item.id, playerSource, webviewLoading]);
+  }, [item.id, playerSource, webviewLoading, playing, isAnime]);
+
+  // Reset failover counter when user manually changes source or item changes
+  useEffect(() => {
+    failoverCountRef.current = 0;
+  }, [item.id]);
+
+  // ── Preconnect to best server on page mount for lower latency ──
+  useEffect(() => {
+    serverEngine.preconnectBestServer(isAnime);
+  }, [isAnime]);
 
   // Fetch AniList data + auto-set source for anime/non-anime
   useEffect(() => {
@@ -938,7 +959,16 @@ export default function MoviePage({
                 </button>
               </div>
             )}
-            <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => setWebviewLoading(false)}
+            <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => {
+                setWebviewLoading(false);
+                // Report successful load to the engine with timing
+                if (loadStartRef.current > 0) {
+                  const elapsed = Date.now() - loadStartRef.current;
+                  serverEngine.reportLoad(playerSource, elapsed);
+                  loadStartRef.current = 0;
+                  failoverCountRef.current = 0; // success resets failover chain
+                }
+              }}
               ref={webviewRef}
               src={
                 pipOpen

@@ -31,6 +31,7 @@ import { tmdbFetch,
   NEEDS_INTERCEPT,
   getNextNonAsyncSource,
 } from "../utils/api";
+import { serverEngine } from "../utils/serverEngine";
 import {
   BookmarkIcon,
   BookmarkFillIcon,
@@ -394,6 +395,10 @@ export default function TVPage({
   const [playerSource, setPlayerSource] = useState(
     () => storage.get("playerSource") || NON_ANIME_DEFAULT_SOURCE,
   );
+  // Track iframe load start time for the server engine
+  const loadStartRef = useRef(0);
+  // Track how many consecutive failovers we've attempted to avoid infinite loops
+  const failoverCountRef = useRef(0);
   // Accent colour + subtitle lang come from App-level state (via props),
   // so they are always fresh after Settings save without any extra storage reads.
   const playerAccentColor = playerSettings?.accentColor ?? null;
@@ -651,6 +656,7 @@ export default function TVPage({
     setResolvingUrl(false);
     setResolveError(null);
     setWebviewLoading(true); // instantly blank the player on every source/episode switch
+    loadStartRef.current = Date.now(); // start timing the load
   }, [
     item.id,
     selectedEp?.episode_number,
@@ -659,17 +665,33 @@ export default function TVPage({
     dubMode,
   ]);
 
-  // ── Auto-failover: if Nxsha doesn't load within 10s, switch to Videasy ──
+  // ── Universal auto-failover: if ANY server doesn't load within 8s, switch to next best ──
   useEffect(() => {
-    if (playerSource !== "nxsha") return;
+    if (!playing || !webviewLoading) return;
+    if (sourceIsAsync(playerSource)) return; // async sources have their own flow
     const timer = setTimeout(() => {
-      if (webviewLoading) {
-        console.warn("[Watch Hive] Nxsha timed out, auto-switching to Videasy");
-        setPlayerSource("videasy");
+      if (!webviewLoading) return;
+      // Server timed out — penalize it and try the next best
+      serverEngine.reportFailure(playerSource);
+      const next = serverEngine.getNextBest(playerSource, isAnime);
+      if (next && failoverCountRef.current < PLAYER_SOURCES.length) {
+        console.warn(`[WatchHive] ${playerSource} timed out, auto-switching to ${next}`);
+        failoverCountRef.current += 1;
+        setPlayerSource(next);
       }
-    }, 10000);
+    }, 8000);
     return () => clearTimeout(timer);
-  }, [item.id, selectedEp?.episode_number, selectedSeason, playerSource, webviewLoading]);
+  }, [item.id, selectedEp?.episode_number, selectedSeason, playerSource, webviewLoading, playing, isAnime]);
+
+  // Reset failover counter when item changes
+  useEffect(() => {
+    failoverCountRef.current = 0;
+  }, [item.id]);
+
+  // ── Preconnect to best server on page mount for lower latency ──
+  useEffect(() => {
+    serverEngine.preconnectBestServer(isAnime);
+  }, [isAnime]);
 
   // Fetch AniList metadata + auto-set anime source
   useEffect(() => {
@@ -1975,7 +1997,16 @@ export default function TVPage({
                     </div>
                   </div>
                 )}
-                <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => setWebviewLoading(false)}
+                <iframe allowFullScreen webkitAllowFullScreen mozAllowFullScreen onLoad={() => {
+                    setWebviewLoading(false);
+                    // Report successful load to the engine with timing
+                    if (loadStartRef.current > 0) {
+                      const elapsed = Date.now() - loadStartRef.current;
+                      serverEngine.reportLoad(playerSource, elapsed);
+                      loadStartRef.current = 0;
+                      failoverCountRef.current = 0; // success resets failover chain
+                    }
+                  }}
                   ref={webviewRef}
                   src={
                     pipOpen
