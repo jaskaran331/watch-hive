@@ -1209,6 +1209,7 @@ export default function TVPage({
     playerSource,
     isAnime,
     introSkipMode,
+    isAsync,
   ]);
 
   // ── AniSkip: auto-skip or show manual prompt ─────────────────
@@ -1394,6 +1395,7 @@ export default function TVPage({
     currentProgressKey,
     watchedThreshold,
     progressViaFrames,
+    isAsync,
   ]);
 
   // Skip backward/forward by N seconds via webview JS injection
@@ -1436,7 +1438,7 @@ export default function TVPage({
         `);
       } catch {}
     };
-  }, [playing, playerSource]);
+  }, [playing, playerSource, isAsync]);
 
   const playEpisode = useCallback(
     (ep) => {

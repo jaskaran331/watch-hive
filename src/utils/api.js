@@ -69,50 +69,65 @@ function _releaseSlot() {
   }
 }
 
-export const tmdbFetch = async (path, apiKey) => {
+const _inflightRequests = new Map();
+
+export const tmdbFetch = async (path, apiKey, options = {}) => {
   const localizedPath = withLanguage(path);
   const cacheKey = `${apiKey}|${localizedPath}`;
   const cached = _tmdbCache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) return cached.data;
 
-  await _acquireSlot();
-
-  let res;
-  try {
-    res = await fetch(`${TMDB_BASE}${localizedPath}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-  } catch {
-    _releaseSlot();
-    _onUnreachable?.();
-    throw new Error("TMDB unreachable");
-  } finally {
-    // releaseSlot is called in the catch above for network errors;
-    // for successful responses it is called immediately below, before
-    // parsing, so the slot is held only during the actual in-flight
-    // request, not during res.json().
+  if (_inflightRequests.has(cacheKey)) {
+    return _inflightRequests.get(cacheKey);
   }
 
-  _releaseSlot();
+  const promise = (async () => {
+    await _acquireSlot();
 
-  if (res.status === 401 || res.status === 403) {
-    _onAuthError?.();
-    throw new Error(`TMDB ${res.status}`);
-  }
-
-  if (!res.ok) throw new Error(`TMDB ${res.status}`);
-  const data = await res.json();
-  _tmdbCache.set(cacheKey, { data, expiresAt: Date.now() + TMDB_CACHE_TTL });
-
-  // Evict stale entries to prevent unbounded memory growth
-  if (_tmdbCache.size > 80) {
-    const now = Date.now();
-    for (const [k, v] of _tmdbCache) {
-      if (now >= v.expiresAt) _tmdbCache.delete(k);
+    let res;
+    try {
+      res = await fetch(`${TMDB_BASE}${localizedPath}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        ...options,
+      });
+    } catch (e) {
+      _releaseSlot();
+      if (e.name === "AbortError") {
+        throw e;
+      }
+      _onUnreachable?.();
+      throw new Error("TMDB unreachable");
     }
-  }
 
-  return data;
+    _releaseSlot();
+
+    if (res.status === 401 || res.status === 403) {
+      _onAuthError?.();
+      throw new Error(`TMDB ${res.status}`);
+    }
+
+    if (!res.ok) throw new Error(`TMDB ${res.status}`);
+    const data = await res.json();
+    _tmdbCache.set(cacheKey, { data, expiresAt: Date.now() + TMDB_CACHE_TTL });
+
+    // Evict stale entries to prevent unbounded memory growth
+    if (_tmdbCache.size > 80) {
+      const now = Date.now();
+      for (const [k, v] of _tmdbCache) {
+        if (now >= v.expiresAt) _tmdbCache.delete(k);
+      }
+    }
+
+    return data;
+  })();
+
+  _inflightRequests.set(cacheKey, promise);
+
+  try {
+    return await promise;
+  } finally {
+    _inflightRequests.delete(cacheKey);
+  }
 };
 
 // Documentation:
