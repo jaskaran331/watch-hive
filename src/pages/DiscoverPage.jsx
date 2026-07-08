@@ -123,7 +123,7 @@ export default function DiscoverPage({ apiKey, onSelect }) {
                   <MediaCard
                     key={`${completeItem.id}-${i}`}
                     item={completeItem}
-                    onClick={() => onSelect(completeItem)}
+                    onClick={onSelect}
                   />
                 );
               })}

@@ -370,7 +370,7 @@ export default function HomePage({
                     <MediaCard
                       key={`${item.media_type}_${item.id}`}
                       item={item}
-                      onClick={() => onSelect(item)}
+                      onClick={onSelect}
                       progress={progress[pk] || 0}
                       watched={watched}
                       onMarkWatched={onMarkWatched}
@@ -411,7 +411,7 @@ export default function HomePage({
                     <MediaCard
                       key={`${item.media_type}_${item.id}`}
                       item={item}
-                      onClick={() => onSelect(item)}
+                      onClick={onSelect}
                       rank={isRanked ? items.indexOf(item) + 1 : undefined}
                       progress={0}
                       watched={watched}

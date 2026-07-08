@@ -79,19 +79,25 @@ const MediaCard = memo(function MediaCard({
     setMenu(null);
   };
 
+  const handleClick = useCallback(() => {
+    onClick?.(item);
+  }, [onClick, item]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick?.(item);
+    }
+  }, [onClick, item]);
+
   return (
     <>
       <div
         className={`card${isWatched ? " ep-watched" : ""}${isUnreleased ? " card--unreleased" : ""}`}
-        onClick={onClick}
+        onClick={handleClick}
         onContextMenu={isUnreleased ? undefined : openMenu}
         tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onClick();
-          }
-        }}
+        onKeyDown={handleKeyDown}
       >
         <div className="card-poster">
           {item.poster_path ? (
