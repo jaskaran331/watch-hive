@@ -104,7 +104,14 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
   const openInBrowser = () => {
     const preferred = getInvidiousBase();
     const url = `${preferred}/watch?v=${trailerKey}`;
-    window.electron?.openExternal(url);
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+        window.electron?.openExternal(url);
+      }
+    } catch (err) {
+      // Ignore invalid URLs
+    }
   };
 
   useEffect(() => {
@@ -132,7 +139,14 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
       const instanceBase = currentSrc.split("/embed/")[0];
       if (!e.url.startsWith(instanceBase)) {
         e.preventDefault();
-        window.electron?.openExternal(e.url);
+        try {
+          const parsedUrl = new URL(e.url);
+          if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+            window.electron?.openExternal(e.url);
+          }
+        } catch (err) {
+          // Ignore invalid URLs
+        }
       }
     };
 
