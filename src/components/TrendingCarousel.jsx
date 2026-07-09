@@ -93,6 +93,8 @@ const CarouselSlot = memo(function CarouselSlot({
         {poster ? (
           <img
             src={poster}
+            srcSet={`${imgUrl(item.poster_path, 'w185')} 185w, ${imgUrl(item.poster_path, 'w342')} 342w, ${imgUrl(item.poster_path, 'w500')} 500w`}
+            sizes="170px"
             alt={title}
             className="carousel-poster"
             draggable={false}

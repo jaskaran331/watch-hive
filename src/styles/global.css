@@ -292,8 +292,10 @@ body,
 .hero-bg {
     position: absolute;
     inset: 0;
-    background-size: cover;
-    background-position: center top;
+}
+
+main {
+    display: contents;
 }
 
 .hero-bg::after {

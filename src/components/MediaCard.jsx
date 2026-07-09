@@ -103,6 +103,8 @@ const MediaCard = memo(function MediaCard({
           {item.poster_path ? (
             <img
               src={imgUrl(item.poster_path, "w342")}
+              srcSet={`${imgUrl(item.poster_path, 'w185')} 185w, ${imgUrl(item.poster_path, 'w342')} 342w, ${imgUrl(item.poster_path, 'w500')} 500w`}
+              sizes="(max-width: 700px) 115px, 150px"
               alt={title}
               loading="lazy"
               decoding="async"

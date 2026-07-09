@@ -280,74 +280,84 @@ export default function HomePage({
       )}
 
       {/* ── Hero (always first) ── */}
-      {!loading && currentHero && (
-        <div className="hero">
-          <div
-            className="hero-bg"
-            style={{
-              backgroundImage: `url(${imgUrl(currentHero.backdrop_path, "original")})`,
-            }}
-          />
-          <div className="hero-gradient" />
-          
-          <button className="hero-nav-btn left" onClick={prevHero}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <div className="hero-content">
-            <div className="hero-type">NOW STREAMING</div>
-            <div className="hero-title">{currentHero.title || currentHero.name}</div>
-            <div className="hero-meta">
-              <span className="hero-rating">
-                <StarIcon /> {currentHero.vote_average?.toFixed(1)}
-              </span>
-              <RatingBadge
-                cert={getRating(currentHero).cert}
-                restricted={getRating(currentHero).restricted}
+      <div className="hero">
+        {(!loading && currentHero) ? (
+          <>
+            <div className="hero-bg">
+              <img
+                src={imgUrl(currentHero.backdrop_path, "w1280")}
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+                width="1280"
+                height="720"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
               />
-              <span>{currentHero.release_date?.slice(0, 4) || currentHero.first_air_date?.slice(0, 4)}</span>
             </div>
-            <div className="hero-overview">{currentHero.overview}</div>
-            <div className="hero-actions">
-              <button
-                className="btn btn-yellow"
-                onClick={() => onSelect(currentHero)}
-              >
-                <PlayIcon /> Watch Now
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ marginLeft: 12, backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
-                onClick={() => {
-                  const all = [...trending, ...trendingTV];
-                  if (all.length > 0) {
-                    const randomItem = all[Math.floor(Math.random() * all.length)];
-                    onSelect(randomItem);
-                  }
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 8}}>
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <circle cx="15.5" cy="15.5" r="1.5"></circle>
-                  <circle cx="15.5" cy="8.5" r="1.5"></circle>
-                  <circle cx="8.5" cy="15.5" r="1.5"></circle>
-                  <circle cx="12" cy="12" r="1.5"></circle>
-                </svg>
-                Random Pick
-              </button>
+            <div className="hero-gradient" />
+            
+            <button className="hero-nav-btn left" onClick={prevHero} aria-label="Previous movie">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <div className="hero-content">
+              <div className="hero-type">NOW STREAMING</div>
+              <div className="hero-title">{currentHero.title || currentHero.name}</div>
+              <div className="hero-meta">
+                <span className="hero-rating">
+                  <StarIcon /> {currentHero.vote_average?.toFixed(1)}
+                </span>
+                <RatingBadge
+                  cert={getRating(currentHero).cert}
+                  restricted={getRating(currentHero).restricted}
+                />
+                <span>{currentHero.release_date?.slice(0, 4) || currentHero.first_air_date?.slice(0, 4)}</span>
+              </div>
+              <div className="hero-overview">{currentHero.overview}</div>
+              <div className="hero-actions">
+                <button
+                  className="btn btn-yellow"
+                  onClick={() => onSelect(currentHero)}
+                >
+                  <PlayIcon /> Watch Now
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  aria-label="Random pick"
+                  style={{ marginLeft: 12, backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+                  onClick={() => {
+                    const all = [...trending, ...trendingTV];
+                    if (all.length > 0) {
+                      const randomItem = all[Math.floor(Math.random() * all.length)];
+                      onSelect(randomItem);
+                    }
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: 8}}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <circle cx="15.5" cy="15.5" r="1.5"></circle>
+                    <circle cx="15.5" cy="8.5" r="1.5"></circle>
+                    <circle cx="8.5" cy="15.5" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                  </svg>
+                  Random Pick
+                </button>
+              </div>
             </div>
-          </div>
 
-          <button className="hero-nav-btn right" onClick={nextHero}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      )}
+            <button className="hero-nav-btn right" onClick={nextHero} aria-label="Next movie">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: 'var(--surface2)', opacity: 0.5 }} className="skeleton-pulse" />
+        )}
+      </div>
 
       {/* ── Rows in user-configured order ── */}
       {rowOrder.map((id) => {
