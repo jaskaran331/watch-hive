@@ -41,10 +41,7 @@ import {
   ShieldBlockIcon,
   PopOutIcon,
 } from "../components/Icons";
-import DownloadModal from "../components/DownloadModal";
 import TrailerModal from "../components/TrailerModal";
-import BlockedStatsModal from "../components/BlockedStatsModal";
-import { useBlockedStats } from "../utils/useBlockedStats";
 import MediaCard from "../components/MediaCard";
 import TrendingCarousel from "../components/TrendingCarousel";
 import {
@@ -143,14 +140,7 @@ export default function MoviePage({
     () => storage.get("downloaderFolder") || "",
   );
 
-  // Blocked request stats
-  const {
-    sessionTotal: blockedSession,
-    alltimeTotal: blockedAlltime,
-    showModal: showBlockedModal,
-    setShowModal: setShowBlockedModal,
-    getSessionDomains: getBlockedDomains,
-  } = useBlockedStats(item.id);
+  // Blocked request stats removed
 
   // Age rating
   const [rating, setRating] = useState({ cert: null, minAge: null });
@@ -1080,20 +1070,6 @@ export default function MoviePage({
                   {dubMode === "sub" ? "SUB" : "DUB"}
                 </button>
               )}
-              {/* Blocked ads & trackers button */}
-              <button
-                className="player-overlay-btn"
-                onClick={() => {
-                  setShowSourceMenu(false);
-                  setShowBlockedModal(true);
-                }}
-                title="Blocked ads & trackers"
-              >
-                <ShieldBlockIcon />
-                {blockedSession > 0 && (
-                  <span className="player-blocked-badge">{blockedSession}</span>
-                )}
-              </button>
               {/* Pop-out button*/}
               <button
                 className="player-overlay-btn"
@@ -1258,14 +1234,7 @@ export default function MoviePage({
         />
       )}
 
-      {showBlockedModal && (
-        <BlockedStatsModal
-          sessionDomains={getBlockedDomains()}
-          sessionTotal={blockedSession}
-          alltimeTotal={blockedAlltime}
-          onClose={() => setShowBlockedModal(false)}
-        />
-      )}
+
 
       
     </div>

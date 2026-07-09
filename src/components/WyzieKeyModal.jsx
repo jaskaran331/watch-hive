@@ -6,8 +6,6 @@ export default function WyzieKeyModal({ onDone, onSkip }) {
   const [phase, setPhase] = useState("prompt");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const isElectron = typeof window !== "undefined" && !!window.electron;
-
   const saveAndFinish = async (key) => {
     await secureStorage.set(STORAGE_KEYS.WYZIE_API_KEY, key.trim());
     setPhase("success");
@@ -20,9 +18,7 @@ export default function WyzieKeyModal({ onDone, onSkip }) {
     setPhase("validating");
     setErrorMsg("");
     try {
-      const res = isElectron
-        ? await window.electron.wyzieValidateKey(key)
-        : { ok: true };
+      const res = { ok: true };
       if (res.ok) {
         await saveAndFinish(key);
       } else {
@@ -35,30 +31,9 @@ export default function WyzieKeyModal({ onDone, onSkip }) {
     }
   };
 
-  const handleRedeem = async () => {
-    if (!isElectron) return;
-    setPhase("redeeming");
-    setErrorMsg("");
-    try {
-      const res = await window.electron.wyzieOpenRedeem();
-      if (res.cancelled) {
-        setPhase("prompt");
-        return;
-      }
-      if (res.timeout) {
-        setPhase("timeout");
-        return;
-      }
-      if (res.ok && res.key) {
-        await saveAndFinish(res.key);
-      } else {
-        setPhase("prompt");
-        setErrorMsg("Could not extract API key. Please copy it manually.");
-      }
-    } catch (e) {
-      setPhase("prompt");
-      setErrorMsg(e.message);
-    }
+  const handleRedeem = () => {
+    window.open("https://wyzie.ru", "_blank");
+    setPhase("manual");
   };
 
   const cardStyle = {

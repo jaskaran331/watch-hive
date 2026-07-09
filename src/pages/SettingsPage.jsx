@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import UpdateModal from "../components/UpdateModal";
 import {
   storage,
   STORAGE_KEYS,
   secureStorage,
-  isElectron,
   clearAppCaches,
 } from "../utils/storage";
 import { clearTmdbCache } from "../utils/api";
@@ -20,11 +18,6 @@ import { DEFAULT_INVIDIOUS_BASE } from "../components/TrailerModal";
 import { RATING_COUNTRIES } from "../utils/ageRating";
 import { WarningIcon } from "../components/Icons";
 import {
-  checkForUpdatesWithFallback,
-  UPDATE_SOURCES,
-  DEFAULT_UPDATE_SOURCE,
-} from "../utils/updates";
-import {
   HOME_ROWS,
   loadHomeLayout,
   loadHomeViewMode,
@@ -35,7 +28,7 @@ import { formatBytes } from "../utils/storage";
 import { HomeLayoutSection, AppearanceSection } from "../components/settings/AppearanceSection";
 import { LibraryPrivacySection, TmdbLanguageSection } from "../components/settings/LibraryAndDataSection";
 import { SubtitleSettingsSection } from "../components/settings/PlayerSection";
-import { VersionSection, ScheduledBackupSection, BackupRestoreSection, NotificationsSection, StartPageSection } from "../components/settings/SystemSection";
+import { VersionSection, BackupRestoreSection, StartPageSection } from "../components/settings/SystemSection";
 
 // ── Custom Select ─────────────────────────────────────────────────────────────
 function SettingsSelect({ value, onChange, options, style }) {
@@ -1584,16 +1577,7 @@ export default function SettingsPage({
     })();
   }, []);
 
-  const pickFolder = async () => {
-    if (!isElectron) return;
-    const folder = await window.electron.pickFolder();
-    if (folder) {
-      setDownloadPath(folder);
-      storage.set(STORAGE_KEYS.DOWNLOAD_PATH, folder);
-      flash();
-    }
-  };
-
+  
   const handleSavePath = () => {
     storage.set(STORAGE_KEYS.DOWNLOAD_PATH, downloadPath);
     flash();
@@ -1623,7 +1607,6 @@ export default function SettingsPage({
     storage.remove(STORAGE_KEYS.WATCH_PROGRESS);
     storage.remove(STORAGE_KEYS.HISTORY);
     storage.remove(STORAGE_KEYS.WATCHED);
-    if (isElectron) await window.electron.clearWatchData();
     setTimeout(() => window.location.reload(), 800);
     return { msg: "✓ Watch data cleared" };
   };
@@ -1631,21 +1614,12 @@ export default function SettingsPage({
   const handleDeleteAllDownloads = async () => {
     let msg = "✓ All downloads removed";
     setSizes((prev) => ({ ...prev, downloads: 0 }));
-    if (isElectron) {
-      const res = await window.electron.deleteAllDownloads();
-      if (res?.deleted != null) {
-        msg = `✓ Removed ${res.deleted} file${res.deleted !== 1 ? "s" : ""}`;
-        if (res.errors > 0) msg += ` (${res.errors} could not be deleted)`;
-      }
-    } else {
-      storage.remove(STORAGE_KEYS.LOCAL_FILES);
-    }
+    storage.remove(STORAGE_KEYS.LOCAL_FILES);
     return { msg };
   };
 
   const handleResetApp = async () => {
     setShowResetConfirm(false);
-    if (isElectron) await window.electron.resetApp();
     storage.clearAll();
     // Clear non-prefixed localStorage caches
     for (const key of Object.keys(localStorage)) {
@@ -2343,136 +2317,9 @@ export default function SettingsPage({
                 value={downloadPath}
                 onChange={(e) => setDownloadPath(e.target.value)}
               />
-              {isElectron && (
-                <button className="btn btn-secondary" onClick={pickFolder}>
-                  Browse …
-                </button>
-              )}
               <button className="btn btn-primary" onClick={handleSavePath}>
                 Save
               </button>
-            </div>
-            {saved && (
-              <div style={{ marginTop: 10, fontSize: 13, color: "#4caf50" }}>
-                ✓ Saved
-              </div>
-            )}
-            {!downloadPath && (
-              <div style={{ marginTop: 10, fontSize: 13, color: "var(--red)" }}>
-                ⚠ No download folder set - videos cannot be downloaded until you
-                set one.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* GROUP: NOTIFICATIONS                                               */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        <div ref={secNotifications} style={{ scrollMarginTop: 80 }}>
-          <SectionGroupHeader
-            title="Notifications"
-            subtitle="Desktop alerts for downloads and new episode releases"
-          />
-          <NotificationsSection />
-        </div>
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* GROUP: INTERFACE                                                   */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        <div ref={secInterface} style={{ scrollMarginTop: 80 }}>
-          <SectionGroupHeader
-            title="Interface"
-            subtitle="Home layout, start page, appearance, and display options"
-          />
-          <HomeLayoutSection />
-          <Divider />
-          <StartPageSection />
-          <Divider />
-          <AppearanceSection />
-        </div>
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* GROUP: LIBRARY                                                     */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        <div ref={secLibrary} style={{ scrollMarginTop: 80 }}>
-          <SectionGroupHeader
-            title="Library"
-            subtitle="Watchlist sort order and watch history preferences"
-          />
-          <LibraryPrivacySection />
-        </div>
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* GROUP: BACKUP                                                      */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        <div ref={secBackup} style={{ scrollMarginTop: 80 }}>
-          <SectionGroupHeader
-            title="Backup & Restore"
-            subtitle="Export your data or restore from a previous backup file"
-          />
-          <BackupRestoreSection />
-        </div>
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* GROUP: STORAGE & DATA                                              */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        <div ref={secStorage} style={{ scrollMarginTop: 80 }}>
-          <SectionGroupHeader
-            title="Storage & Data"
-            subtitle="Clear cache, watch progress, downloads, or reset the entire app"
-          />
-
-          <div
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              overflow: "hidden",
-            }}
-          >
-            {/* Install location */}
-            <div style={{ padding: "22px 24px" }}>
-              <CleanRow
-                title="Install Location"
-                description="Opens the folder where Streambert is installed."
-                buttonLabel="Open Folder"
-                onAction={async () => {
-                  const p = await window.electron?.getInstallPath?.();
-                  if (p) window.electron.openPath(p);
-                }}
-              />
-            </div>
-
-            <div style={{ height: 1, background: "var(--border)" }} />
-
-            {/* Cache */}
-            <div style={{ padding: "22px 24px" }}>
-              <CleanRow
-                title="Clear Cache"
-                description="Removes temporary browser cache, shader cache, and service worker data from all internal sessions (main, video player, trailer). Does not affect your personal data or settings."
-                buttonLabel="Clear Cache"
-                onAction={handleClearCache}
-                sizeLabel={formatBytes(sizes.cache)}
-              />
-            </div>
-
-            <div style={{ height: 1, background: "var(--border)" }} />
-
-            {/* Watch Progress */}
-            <div style={{ padding: "22px 24px" }}>
-              <CleanRow
-                title="Clear Watch Progress"
-                description="Resets all watch history, continue-watching progress, and watched / completed markings for movies and series. Also clears internal video player session data."
-                buttonLabel="Clear Progress"
-                onAction={() =>
-                  new Promise((resolve) => {
-                    setShowProgressConfirm(true);
-                    window.__progressConfirmResolve = resolve;
-                  })
-                }
-                danger
-              />
             </div>
 
             <div style={{ height: 1, background: "var(--border)" }} />

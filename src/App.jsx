@@ -24,7 +24,6 @@ import MobileNav from "./components/MobileNav";
 import SearchModal from "./components/SearchModal";
 import Footer from "./components/Footer";
 import SetupScreen from "./components/SetupScreen";
-import UpdateModal from "./components/UpdateModal";
 
 // Lazy-loaded pages: each chunk is only downloaded when the user first visits
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -33,10 +32,7 @@ const TVPage = lazy(() => import("./pages/TVPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-import {
-  checkForUpdatesWithFallback,
-  DEFAULT_UPDATE_SOURCE,
-} from "./utils/updates";
+
 
 export default function App() {
   // apiKey loaded async from secure storage (OS keychain)
@@ -52,7 +48,6 @@ export default function App() {
     () => storage.get(STORAGE_KEYS.LIBRARY_SORT) || "manual",
   );
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [platform, setPlatform] = useState(null);
 
   // Navigation history stack for Ctrl+Z back navigation
   const [navStack, setNavStack] = useState([]);
@@ -66,8 +61,6 @@ export default function App() {
   const [history, setHistory] = useState(() => storage.get("history") || []);
   const [watched, setWatched] = useState(() => storage.get("watched") || {});
   const [toast, setToast] = useState(null);
-  const [updateBanner, setUpdateBanner] = useState(null);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
   // null | "checking" | { entries: object[] } | "none"
   const [episodeCheckStatus, setEpisodeCheckStatus] = useState(null);
   const episodeDismissTimerRef = useRef(null);
@@ -100,18 +93,6 @@ export default function App() {
   const [playerSettings, setPlayerSettings] = useState(readPlayerSettings);
 
 
-  // ── Startup update check ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!storage.get("autoCheckUpdates")) return;
-    const source =
-      storage.get(STORAGE_KEYS.UPDATE_SOURCE) || DEFAULT_UPDATE_SOURCE;
-    checkForUpdatesWithFallback(source)
-      .then((r) => {
-        if (r.hasUpdate) setUpdateBanner(r);
-      })
-      .catch(() => {}); // silently ignore network errors on startup
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Startup: new-episode notification check ──────────────────────────────
   // Only runs once the API key has been loaded from secure storage (i.e. the
@@ -266,21 +247,7 @@ export default function App() {
       // Show in-app result card
       setEpisodeCheckStatus({ entries: newEpisodeEntries });
 
-      // Also fire OS notification
-      if (window.electron?.showNotification) {
-        const names = newEpisodeEntries.map((e) => e.title);
-        const body =
-          names.length === 1
-            ? `${names[0]} has a new episode.`
-            : `${names.slice(0, 3).join(", ")}${
-                names.length > 3 ? ` and ${names.length - 3} more` : ""
-              } have new episodes.`;
-        window.electron.showNotification({
-          title: "New episodes available",
-          body,
-          silent: false,
-        });
-      }
+
     }
 
     checkNewEpisodes().catch(() => {
@@ -454,7 +421,6 @@ export default function App() {
     const font = storage.get(STORAGE_KEYS.FONT_SIZE) || "normal";
     const zoomMap = { sm: 0.85, normal: 1, lg: 1.15 };
     const factor = zoomMap[font] ?? 1;
-    if (window.electron?.setZoomFactor) window.electron.setZoomFactor(factor);
     // Compact mode
     const compact = !!storage.get(STORAGE_KEYS.COMPACT_MODE);
     document.body.classList.toggle("compact-mode", compact);
@@ -796,7 +762,7 @@ export default function App() {
   if (!apiKey && !skipped)
     return <SetupScreen onSave={saveApiKey} onSkip={() => setSkipped(true)} />;
 
-  const hasCustomTitlebar = platform === "win32" || platform === "linux";
+  const hasCustomTitlebar = false;
 
   return (
     <ErrorBoundary>
@@ -969,67 +935,7 @@ export default function App() {
             offline={offline}
           />
         )}
-        {updateBanner && (
-          <div
-            style={{
-              position: "fixed",
-              top: hasCustomTitlebar ? 32 : 0,
-              left: 0,
-              right: 0,
-              zIndex: 9999,
-              background: "rgba(229,9,20,0.92)",
-              backdropFilter: "blur(8px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 16,
-              padding: "10px 24px",
-              boxShadow: "0 2px 16px rgba(0,0,0,0.4)",
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#fff",
-            }}
-          >
-            <span>🎉 Watch Hive v{updateBanner.latest} is available!</span>
-            <button
-              onClick={() => setShowUpdateModal(true)}
-              style={{
-                color: "#fff",
-                fontWeight: 700,
-                background: "rgba(255,255,255,0.18)",
-                border: "1px solid rgba(255,255,255,0.4)",
-                borderRadius: 6,
-                padding: "4px 12px",
-                fontSize: 13,
-                cursor: "pointer",
-              }}
-            >
-              Install Update
-            </button>
-            <button
-              onClick={() => setUpdateBanner(null)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "rgba(255,255,255,0.7)",
-                cursor: "pointer",
-                fontSize: 18,
-                lineHeight: 1,
-                padding: "0 4px",
-              }}
-              aria-label="Dismiss"
-            >
-              ×
-            </button>
-          </div>
-        )}
-        {showUpdateModal && updateBanner && (
-          <UpdateModal
-            updateInfo={updateBanner}
-            activeDownloads={activeDownloadCount}
-            onClose={() => setShowUpdateModal(false)}
-          />
-        )}
+
         {toast && <div className="toast">{toast}</div>}
 
         {/* ── Episode check status pill / result card ── */}

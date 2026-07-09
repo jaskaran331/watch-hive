@@ -48,10 +48,7 @@ import {
   ShieldBlockIcon,
   PopOutIcon,
 } from "../components/Icons";
-import DownloadModal from "../components/DownloadModal";
 import TrailerModal from "../components/TrailerModal";
-import BlockedStatsModal from "../components/BlockedStatsModal";
-import { useBlockedStats } from "../utils/useBlockedStats";
 import {
   storage,
   STORAGE_KEYS,
@@ -466,13 +463,6 @@ export default function TVPage({
 
   // Blocked request stats, reset key includes season+episode so counter resets on each ep
   const blockedResetKey = `${item.id}_s${selectedSeason}_e${selectedEp?.episode_number ?? 0}`;
-  const {
-    sessionTotal: blockedSession,
-    alltimeTotal: blockedAlltime,
-    showModal: showBlockedModal,
-    setShowModal: setShowBlockedModal,
-    getSessionDomains: getBlockedDomains,
-  } = useBlockedStats(blockedResetKey);
 
   // Age rating
   const [rating, setRating] = useState({ cert: null, minAge: null });
@@ -2114,22 +2104,7 @@ export default function TVPage({
                       {dubMode === "sub" ? "SUB" : "DUB"}
                     </button>
                   )}
-                  {/* Blocked ads & trackers button */}
-                  <button
-                    className="player-overlay-btn"
-                    onClick={() => {
-                      setShowSourceMenu(false);
-                      setShowBlockedModal(true);
-                    }}
-                    title="Blocked ads & trackers"
-                  >
-                    <ShieldBlockIcon />
-                    {blockedSession > 0 && (
-                      <span className="player-blocked-badge">
-                        {blockedSession}
-                      </span>
-                    )}
-                  </button>
+
                   {/* Pop-out button */}
                   <button
                     className="player-overlay-btn"
@@ -2509,14 +2484,7 @@ export default function TVPage({
         />
       )}
 
-      {showBlockedModal && (
-        <BlockedStatsModal
-          sessionDomains={getBlockedDomains()}
-          sessionTotal={blockedSession}
-          alltimeTotal={blockedAlltime}
-          onClose={() => setShowBlockedModal(false)}
-        />
-      )}
+
 
       
     </div>
