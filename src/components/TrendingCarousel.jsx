@@ -8,12 +8,9 @@ const HALF = Math.floor(VISIBLE / 2);
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 // Compute visibility ratio of el inside scrollRoot (or viewport)
-function visibilityRatio(el, scrollRoot) {
+// rootTop and rootHeight should be pre-computed to avoid layout thrashing
+function visibilityRatio(el, rootTop, rootHeight) {
   const r = el.getBoundingClientRect();
-  const rootTop = scrollRoot ? scrollRoot.getBoundingClientRect().top : 0;
-  const rootHeight = scrollRoot
-    ? scrollRoot.getBoundingClientRect().height
-    : window.innerHeight;
   const visTop = Math.max(r.top, rootTop);
   const visBottom = Math.min(r.bottom, rootTop + rootHeight);
   const px = Math.max(0, visBottom - visTop);
@@ -213,13 +210,19 @@ export default function TrendingCarousel({
     const sectionEl = sectionRef.current;
     if (!sectionEl) return;
     const scrollRoot = document.querySelector(".main");
+    let scrollTimeout = null;
 
     const updateFocus = () => {
       const allSections = document.querySelectorAll(".carousel-section");
       let bestEl = null;
       let bestRatio = -1;
+
+      // Pre-compute scroll bounds once per focus check to prevent layout thrashing
+      const rootTop = scrollRoot ? scrollRoot.getBoundingClientRect().top : 0;
+      const rootHeight = scrollRoot ? scrollRoot.getBoundingClientRect().height : window.innerHeight;
+
       allSections.forEach((el) => {
-        const r = visibilityRatio(el, scrollRoot);
+        const r = visibilityRatio(el, rootTop, rootHeight);
         if (r > bestRatio) {
           bestRatio = r;
           bestEl = el;
@@ -236,9 +239,18 @@ export default function TrendingCarousel({
       }
     };
 
+    const throttledUpdateFocus = () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          scrollTimeout = null;
+          updateFocus();
+        }, 150);
+      }
+    };
+
     const scrollEl = scrollRoot || window;
-    scrollEl.addEventListener("scroll", updateFocus, { passive: true });
-    window.addEventListener("resize", updateFocus, { passive: true });
+    scrollEl.addEventListener("scroll", throttledUpdateFocus, { passive: true });
+    window.addEventListener("resize", throttledUpdateFocus, { passive: true });
 
     // IntersectionObserver for out-of-view fast-path (stop immediately when hidden)
     const observer = new IntersectionObserver(
@@ -258,8 +270,9 @@ export default function TrendingCarousel({
     const id = requestAnimationFrame(updateFocus);
 
     return () => {
-      scrollEl.removeEventListener("scroll", updateFocus);
-      window.removeEventListener("resize", updateFocus);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollEl.removeEventListener("scroll", throttledUpdateFocus);
+      window.removeEventListener("resize", throttledUpdateFocus);
       observer.disconnect();
       cancelAnimationFrame(id);
       clearInterval(intervalRef.current);
