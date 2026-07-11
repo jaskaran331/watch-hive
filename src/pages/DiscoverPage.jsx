@@ -44,7 +44,11 @@ export default function DiscoverPage({ apiKey, onSelect }) {
         const endpoint = `/discover/${mediaType}?with_genres=${selectedGenre}&page=${page}&sort_by=popularity.desc`;
         const res = await tmdbFetch(endpoint, apiKey);
         if (mounted && res.results) {
-          setResults((prev) => (page === 1 ? res.results : [...prev, ...res.results]));
+          const resultsWithMediaType = res.results.map((item) => ({
+            ...item,
+            media_type: mediaType,
+          }));
+          setResults((prev) => (page === 1 ? resultsWithMediaType : [...prev, ...resultsWithMediaType]));
           setHasMore(page < res.total_pages);
         }
       } catch (err) {
@@ -117,16 +121,13 @@ export default function DiscoverPage({ apiKey, onSelect }) {
         {results.length > 0 ? (
           <>
             <div className="cards-grid">
-              {results.map((item, i) => {
-                const completeItem = { ...item, media_type: mediaType };
-                return (
-                  <MediaCard
-                    key={`${completeItem.id}-${i}`}
-                    item={completeItem}
-                    onClick={onSelect}
-                  />
-                );
-              })}
+              {results.map((item, i) => (
+                <MediaCard
+                  key={`${item.id}-${i}`}
+                  item={item}
+                  onClick={onSelect}
+                />
+              ))}
             </div>
             
             {hasMore && (
