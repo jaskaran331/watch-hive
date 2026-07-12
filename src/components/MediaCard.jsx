@@ -198,5 +198,34 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
+}, (prevProps, nextProps) => {
+  // Check shallow equality for all props except 'watched' to prevent stale closures
+  const keys = new Set([...Object.keys(prevProps), ...Object.keys(nextProps)]);
+  for (const key of keys) {
+    if (key === 'watched') continue;
+    if (prevProps[key] !== nextProps[key]) return false;
+  }
+
+  // Derive watchedKey to only check the specific item's watched status
+  const getWatchedKey = (item) => {
+    if (!item) return null;
+    const isTV = item.media_type === "tv";
+    return isTV
+      ? item.season != null && item.episode != null
+        ? `tv_${item.id}_s${item.season}e${item.episode}`
+        : `tv_${item.id}`
+      : `movie_${item.id}`;
+  };
+
+  const prevKey = getWatchedKey(prevProps.item);
+  const nextKey = getWatchedKey(nextProps.item);
+
+  const prevWatched = prevKey ? !!prevProps.watched?.[prevKey] : false;
+  const nextWatched = nextKey ? !!nextProps.watched?.[nextKey] : false;
+
+  if (prevWatched !== nextWatched) return false;
+
+  return true;
 });
+
 export default MediaCard;
