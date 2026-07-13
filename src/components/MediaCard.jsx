@@ -198,5 +198,48 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
+}, function areEqual(prevProps, nextProps) {
+  // ⚡ Bolt: Custom equality check to prevent O(N) re-renders
+  // The 'watched' prop is a global object. By default, any change to it causes ALL
+  // MediaCards to re-render. We only care if THIS item's watched state changed.
+
+  const getWatchedKey = (item) => {
+    if (!item) return null;
+    const isTV = item.media_type === "tv";
+    return isTV
+      ? item.season != null && item.episode != null
+        ? `tv_${item.id}_s${item.season}e${item.episode}`
+        : `tv_${item.id}`
+      : `movie_${item.id}`;
+  };
+
+  const prevKey = getWatchedKey(prevProps.item);
+  const nextKey = getWatchedKey(nextProps.item);
+
+  // Extract boolean watched state for this specific item
+  const prevIsWatched = prevKey ? !!(prevProps.watched && prevProps.watched[prevKey]) : false;
+  const nextIsWatched = nextKey ? !!(nextProps.watched && nextProps.watched[nextKey]) : false;
+
+  // If the actual boolean watched state changed, we MUST re-render
+  if (prevIsWatched !== nextIsWatched) {
+    return false;
+  }
+
+  // Perform shallow compare on all OTHER props to prevent stale closures (like onClick)
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (let i = 0; i < prevKeys.length; i++) {
+    const key = prevKeys[i];
+    if (key === 'watched') continue;
+    if (prevProps[key] !== nextProps[key]) {
+      return false;
+    }
+  }
+
+  return true;
 });
+
 export default MediaCard;
