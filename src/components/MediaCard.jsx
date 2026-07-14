@@ -1,5 +1,34 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { imgUrl, isAnimeContent } from "../utils/api";
+
+// Custom equality function to prevent O(N) re-renders when the global `watched` object changes.
+// We shallow compare all other props, but for `watched`, we only check this specific item's key.
+function arePropsEqual(prevProps, nextProps) {
+  const keys = new Set([...Object.keys(prevProps), ...Object.keys(nextProps)]);
+  for (const key of keys) {
+    if (key === 'watched') continue;
+    if (prevProps[key] !== nextProps[key]) return false;
+  }
+
+  if (prevProps.item || nextProps.item) {
+    const item = nextProps.item || prevProps.item;
+    const isTV = item.media_type === "tv";
+    const watchedKey = isTV
+      ? item.season != null && item.episode != null
+        ? `tv_${item.id}_s${item.season}e${item.episode}`
+        : `tv_${item.id}`
+      : `movie_${item.id}`;
+
+    const prevWatched = !!prevProps.watched?.[watchedKey];
+    const nextWatched = !!nextProps.watched?.[watchedKey];
+    if (prevWatched !== nextWatched) return false;
+  }
+
+  return true;
+}
+
+
+
 import {
   PlayIcon,
   FilmIcon,
@@ -9,7 +38,7 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
-const MediaCard = memo(function MediaCard({
+const MediaCard = function MediaCard({
   item,
   onClick,
   progress,
@@ -198,5 +227,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
-export default MediaCard;
+};
+export default memo(MediaCard, arePropsEqual);
