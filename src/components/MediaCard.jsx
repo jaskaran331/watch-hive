@@ -9,6 +9,38 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
+function getWatchedKey(item) {
+  if (!item) return null;
+  const isTV = item.media_type === "tv";
+  return isTV
+    ? item.season != null && item.episode != null
+      ? `tv_${item.id}_s${item.season}e${item.episode}`
+      : `tv_${item.id}`
+    : `movie_${item.id}`;
+}
+
+// ⚡ Bolt: Custom equality function to prevent unnecessary re-renders.
+// The `watched` prop is a large global object. We only care if the watched
+// status of *this specific item* has changed. This prevents O(N) re-renders
+// for large media lists when checking/unchecking a single item.
+function arePropsEqual(prevProps, nextProps) {
+  const keys = new Set([...Object.keys(prevProps), ...Object.keys(nextProps)]);
+  for (const key of keys) {
+    if (key === "watched") {
+      const prevKey = getWatchedKey(prevProps.item);
+      const nextKey = getWatchedKey(nextProps.item);
+      if (prevKey !== nextKey) return false;
+
+      const prevWatched = !!prevProps.watched?.[prevKey];
+      const nextWatched = !!nextProps.watched?.[nextKey];
+      if (prevWatched !== nextWatched) return false;
+    } else {
+      if (prevProps[key] !== nextProps[key]) return false;
+    }
+  }
+  return true;
+}
+
 const MediaCard = memo(function MediaCard({
   item,
   onClick,
@@ -198,5 +230,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}, arePropsEqual);
 export default MediaCard;
