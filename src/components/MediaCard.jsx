@@ -9,7 +9,19 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
-const MediaCard = memo(function MediaCard({
+// ⚡ Bolt: Helper to get the watched key for a specific item
+function getWatchedKey(item) {
+  if (!item) return null;
+  const isTV = item.media_type === "tv";
+  return isTV
+    ? item.season != null && item.episode != null
+      ? `tv_${item.id}_s${item.season}e${item.episode}`
+      : `tv_${item.id}`
+    : `movie_${item.id}`;
+}
+
+const MediaCard = function MediaCard({
+
   item,
   onClick,
   progress,
@@ -32,11 +44,7 @@ const MediaCard = memo(function MediaCard({
   const isUnreleased = rawDate ? new Date(rawDate) > today : false;
 
   // Build watched key for TV cards from Continue Watching we get season/episode
-  const watchedKey = isTV
-    ? item.season != null && item.episode != null
-      ? `tv_${item.id}_s${item.season}e${item.episode}`
-      : `tv_${item.id}`
-    : `movie_${item.id}`;
+  const watchedKey = getWatchedKey(item);
 
   const isWatched = !!watched?.[watchedKey];
 
@@ -198,5 +206,33 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
-export default MediaCard;
+};
+
+// ⚡ Bolt: Custom equality function to prevent O(N) re-renders when the global `watched` object changes.
+// We only check if the specific item's watched status has changed.
+function arePropsEqual(prevProps, nextProps) {
+  // Check if specific watched status changed
+  const prevKey = getWatchedKey(prevProps.item);
+  const nextKey = getWatchedKey(nextProps.item);
+
+  const prevWatched = prevKey ? !!prevProps.watched?.[prevKey] : false;
+  const nextWatched = nextKey ? !!nextProps.watched?.[nextKey] : false;
+
+  if (prevWatched !== nextWatched) return false;
+
+  // Shallow comparison of all other props by iterating over keys
+  // This prevents bugs with stale closures by making sure other changes (like callbacks) are caught
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (const key of prevKeys) {
+    if (key === 'watched') continue;
+    if (prevProps[key] !== nextProps[key]) return false;
+  }
+
+  return true;
+}
+
+export default memo(MediaCard, arePropsEqual);
