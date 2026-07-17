@@ -9,7 +9,7 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
-const MediaCard = memo(function MediaCard({
+function MediaCardComponent({
   item,
   onClick,
   progress,
@@ -198,5 +198,47 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}
+
+// Custom areEqual function to prevent O(N) re-renders for large global watched objects
+// By iterating through all keys, we avoid the stale closure issues from hard-coding props
+function areEqual(prevProps, nextProps) {
+  const allKeys = new Set([...Object.keys(prevProps), ...Object.keys(nextProps)]);
+
+  for (const key of allKeys) {
+    if (key === 'watched') {
+      const prevItem = prevProps.item;
+      const nextItem = nextProps.item;
+      const prevIsTV = prevItem.media_type === "tv";
+      const nextIsTV = nextItem.media_type === "tv";
+
+      const prevWatchedKey = prevIsTV
+        ? prevItem.season != null && prevItem.episode != null
+          ? `tv_${prevItem.id}_s${prevItem.season}e${prevItem.episode}`
+          : `tv_${prevItem.id}`
+        : `movie_${prevItem.id}`;
+
+      const nextWatchedKey = nextIsTV
+        ? nextItem.season != null && nextItem.episode != null
+          ? `tv_${nextItem.id}_s${nextItem.season}e${nextItem.episode}`
+          : `tv_${nextItem.id}`
+        : `movie_${nextItem.id}`;
+
+      const prevIsWatched = !!prevProps.watched?.[prevWatchedKey];
+      const nextIsWatched = !!nextProps.watched?.[nextWatchedKey];
+
+      if (prevIsWatched !== nextIsWatched) {
+        return false;
+      }
+    } else {
+      if (prevProps[key] !== nextProps[key]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+const MediaCard = memo(MediaCardComponent, areEqual);
 export default MediaCard;
