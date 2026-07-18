@@ -413,7 +413,8 @@ export default function HomePage({
                 )}
               </div>
               <div className="cards-grid">
-                {items.map((item) => {
+                {/* ⚡ Bolt: Use map index instead of indexOf to fix O(n²) bottleneck */}
+                {items.map((item, index) => {
                   const type = item.media_type === "tv" ? "tv" : "movie";
                   const rk = `${type}_${item.id}`;
                   const rd = enrichedRatingsMap[rk] || {};
@@ -422,7 +423,7 @@ export default function HomePage({
                       key={`${item.media_type}_${item.id}`}
                       item={item}
                       onClick={onSelect}
-                      rank={isRanked ? items.indexOf(item) + 1 : undefined}
+                      rank={isRanked ? index + 1 : undefined}
                       progress={0}
                       watched={watched}
                       onMarkWatched={onMarkWatched}

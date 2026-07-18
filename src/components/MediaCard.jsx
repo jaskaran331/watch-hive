@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { imgUrl, isAnimeContent } from "../utils/api";
 import {
   PlayIcon,
@@ -26,10 +26,14 @@ const MediaCard = memo(function MediaCard({
   const isAnime = isAnimeContent(item);
 
   // Unreleased detection
+  // ⚡ Bolt: Memoize date calculation to avoid new Date() on every render for every card
   const rawDate = item.release_date || item.first_air_date;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const isUnreleased = rawDate ? new Date(rawDate) > today : false;
+  const isUnreleased = useMemo(() => {
+    if (!rawDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(rawDate) > today;
+  }, [rawDate]);
 
   // Build watched key for TV cards from Continue Watching we get season/episode
   const watchedKey = isTV
