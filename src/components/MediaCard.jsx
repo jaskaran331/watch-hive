@@ -9,6 +9,42 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
+function arePropsEqual(prevProps, nextProps) {
+  // Prevent O(N) re-renders when global 'watched' or 'progress' objects change.
+  // Instead of comparing the entire objects, we only compare the values that affect this specific item.
+  const item = nextProps.item;
+  const isTV = item.media_type === "tv";
+  const key = isTV
+    ? item.season != null && item.episode != null
+      ? `tv_${item.id}_s${item.season}e${item.episode}`
+      : `tv_${item.id}`
+    : `movie_${item.id}`;
+
+  // Check watched state for this specific item
+  const prevWatched = !!prevProps.watched?.[key];
+  const nextWatched = !!nextProps.watched?.[key];
+  if (prevWatched !== nextWatched) return false;
+
+  // Perform a shallow comparison of all other props by iterating over them,
+  // skipping the global 'watched' object which we already checked.
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (const k of prevKeys) {
+    if (k === 'watched') continue;
+    if (prevProps[k] !== nextProps[k]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// ⚡ Bolt Performance Optimization:
+// Added custom arePropsEqual to React.memo to prevent O(N) re-renders
+// for all MediaCard instances when the global 'watched' object changes.
 const MediaCard = memo(function MediaCard({
   item,
   onClick,
@@ -198,5 +234,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}, arePropsEqual);
 export default MediaCard;
