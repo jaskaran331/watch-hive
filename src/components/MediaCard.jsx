@@ -9,7 +9,53 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
+
+// ⚡ Bolt Performance Optimization:
+// By default, React.memo does a shallow comparison of all props.
+// However, 'watched' is a global dictionary (Object) that tracks watched statuses.
+// If *any* item is marked watched, the reference to the 'watched' object changes,
+// causing O(N) re-renders for all MediaCards on the screen, even if their specific
+// watched status didn't change.
+// This custom equality function avoids those unnecessary re-renders by doing a
+// shallow compare on all other props, but checking *only* the specific watchedKey
+// for this item inside the 'watched' prop.
+// Impact: Reduces re-renders from O(N) -> O(1) when marking items as watched.
+function arePropsEqual(prevProps, nextProps) {
+  const getWatchedKey = (item) => {
+    if (!item) return null;
+    const isTV = item.media_type === "tv";
+    return isTV
+      ? item.season != null && item.episode != null
+        ? `tv_${item.id}_s${item.season}e${item.episode}`
+        : `tv_${item.id}`
+      : `movie_${item.id}`;
+  };
+
+  const prevKey = getWatchedKey(prevProps.item);
+  const nextKey = getWatchedKey(nextProps.item);
+
+  if (prevKey !== nextKey) return false;
+
+  const prevIsWatched = !!prevProps.watched?.[prevKey];
+  const nextIsWatched = !!nextProps.watched?.[nextKey];
+
+  if (prevIsWatched !== nextIsWatched) return false;
+
+  const keys = Object.keys(prevProps);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key === 'watched') continue;
+    if (prevProps[key] !== nextProps[key]) return false;
+  }
+
+  const nextKeys = Object.keys(nextProps);
+  if (keys.length !== nextKeys.length) return false;
+
+  return true;
+}
+
 const MediaCard = memo(function MediaCard({
+
   item,
   onClick,
   progress,
@@ -198,5 +244,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}, arePropsEqual);
 export default MediaCard;
