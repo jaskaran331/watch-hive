@@ -9,6 +9,39 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
+const getWatchedKey = (item) => {
+  if (!item) return null;
+  const isTV = item.media_type === "tv";
+  return isTV
+    ? item.season != null && item.episode != null
+      ? `tv_${item.id}_s${item.season}e${item.episode}`
+      : `tv_${item.id}`
+    : `movie_${item.id}`;
+};
+
+const arePropsEqual = (prevProps, nextProps) => {
+  if (prevProps.item !== nextProps.item) return false;
+
+  const key = getWatchedKey(prevProps.item);
+  if (key) {
+    const prevWatched = !!prevProps.watched?.[key];
+    const nextWatched = !!nextProps.watched?.[key];
+    if (prevWatched !== nextWatched) return false;
+  }
+
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (const k of prevKeys) {
+    if (k === 'watched') continue;
+    if (prevProps[k] !== nextProps[k]) return false;
+  }
+
+  return true;
+};
+
 const MediaCard = memo(function MediaCard({
   item,
   onClick,
@@ -32,11 +65,7 @@ const MediaCard = memo(function MediaCard({
   const isUnreleased = rawDate ? new Date(rawDate) > today : false;
 
   // Build watched key for TV cards from Continue Watching we get season/episode
-  const watchedKey = isTV
-    ? item.season != null && item.episode != null
-      ? `tv_${item.id}_s${item.season}e${item.episode}`
-      : `tv_${item.id}`
-    : `movie_${item.id}`;
+  const watchedKey = getWatchedKey(item);
 
   const isWatched = !!watched?.[watchedKey];
 
@@ -198,5 +227,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}, arePropsEqual);
 export default MediaCard;
