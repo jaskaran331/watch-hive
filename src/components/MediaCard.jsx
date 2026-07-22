@@ -198,5 +198,40 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
+}, (prevProps, nextProps) => {
+  // ⚡ Bolt: Custom equality check to prevent O(N) re-renders when the global 'watched' state changes.
+  // We only care if the watched status specifically for this item has changed.
+  // Other props are shallow compared by iterating over them to prevent stale closure bugs.
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (const key of prevKeys) {
+    if (key === "watched") {
+      const item = nextProps.item;
+      if (!item) continue;
+
+      const isTV = item.media_type === "tv";
+      const watchedKey = isTV
+        ? item.season != null && item.episode != null
+          ? `tv_${item.id}_s${item.season}e${item.episode}`
+          : `tv_${item.id}`
+        : `movie_${item.id}`;
+
+      const prevWatched = !!prevProps.watched?.[watchedKey];
+      const nextWatched = !!nextProps.watched?.[watchedKey];
+
+      if (prevWatched !== nextWatched) {
+        return false;
+      }
+    } else {
+      if (prevProps[key] !== nextProps[key]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 });
 export default MediaCard;
