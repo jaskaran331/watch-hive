@@ -9,6 +9,37 @@ import {
   RatingLockIcon,
 } from "./Icons";
 
+function propsAreEqual(prevProps, nextProps) {
+  // Shallow compare all props EXCEPT 'watched' to prevent stale closures.
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (let i = 0; i < prevKeys.length; i++) {
+    const key = prevKeys[i];
+    if (key !== "watched" && prevProps[key] !== nextProps[key]) {
+      return false;
+    }
+  }
+
+  // Optimize watched comparison:
+  // Since watched is a global object, only re-render if THIS specific item's watched status changed.
+  if (prevProps.watched === nextProps.watched) return true;
+
+  const item = nextProps.item;
+  if (!item) return false;
+
+  const isTV = item.media_type === "tv";
+  const watchedKey = isTV
+    ? item.season != null && item.episode != null
+      ? `tv_${item.id}_s${item.season}e${item.episode}`
+      : `tv_${item.id}`
+    : `movie_${item.id}`;
+
+  return !!prevProps.watched?.[watchedKey] === !!nextProps.watched?.[watchedKey];
+}
+
 const MediaCard = memo(function MediaCard({
   item,
   onClick,
@@ -198,5 +229,5 @@ const MediaCard = memo(function MediaCard({
       )}
     </>
   );
-});
+}, propsAreEqual);
 export default MediaCard;
